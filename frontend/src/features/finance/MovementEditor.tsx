@@ -10,7 +10,9 @@ import { TagInput } from '../../ui/TagInput'
 import { useToast } from '../../ui/toast-context'
 import {
   MOVEMENT_KINDS,
+  RECURRING_FREQUENCIES,
   useAccounts,
+  useCreateRecurring,
   useDeleteMovement,
   useFinanceCategories,
   useFinanceTags,
@@ -18,15 +20,18 @@ import {
   useSaveMovement,
   type Movement,
   type MovementKind,
+  type RecurringFrequency,
 } from './api'
 
 interface MovementEditorProps {
   movement: Movement | null
   initialKind?: MovementKind
+  /** Abre el formulario con «Repetir» ya activado (desde la lista de recurrentes). */
+  initialRepeat?: boolean
   onClose: () => void
 }
 
-export function MovementEditor({ movement, initialKind = 'EXPENSE', onClose }: MovementEditorProps) {
+export function MovementEditor({ movement, initialKind = 'EXPENSE', initialRepeat = false, onClose }: MovementEditorProps) {
   const { t } = useTranslation()
   const toast = useToast()
   const { today, locale } = useDateFormat()
@@ -36,6 +41,7 @@ export function MovementEditor({ movement, initialKind = 'EXPENSE', onClose }: M
   const save = useSaveMovement()
   const remove = useDeleteMovement()
   const saveAccount = useSaveAccount()
+  const createRecurring = useCreateRecurring()
 
   const [kind, setKind] = useState<MovementKind>(movement?.kind ?? initialKind)
   const [amount, setAmount] = useState(movement ? centsToInput(movement.amountCents, locale) : '')
@@ -47,8 +53,14 @@ export function MovementEditor({ movement, initialKind = 'EXPENSE', onClose }: M
   const [newAccount, setNewAccount] = useState<string | null>(null)
   const [amountError, setAmountError] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  // Solo al crear: un movimiento repetido se guarda como regla recurrente que genera los movimientos.
+  const [repeat, setRepeat] = useState<RecurringFrequency | ''>(initialRepeat ? 'MONTHLY' : '')
+  const [every, setEvery] = useState('1')
+  const [until, setUntil] = useState('')
 
-  const error = save.error instanceof ApiError ? save.error : null
+  const pending = save.isPending || createRecurring.isPending
+  const failure = repeat ? createRecurring.error : save.error
+  const error = failure instanceof ApiError ? failure : null
   const fieldErrors = error?.fieldErrors ?? {}
   const options = (categories.data ?? []).filter(
     (category) => category.kind === kind && (!category.archived || category.id === movement?.category.id),
@@ -67,6 +79,29 @@ export function MovementEditor({ movement, initialKind = 'EXPENSE', onClose }: M
       return
     }
     setAmountError(null)
+    const done = {
+      onSuccess: () => {
+        toast(t('common.saved'))
+        onClose()
+      },
+    }
+    if (repeat) {
+      createRecurring.mutate(
+        {
+          kind,
+          amountCents: cents,
+          categoryId: categoryId || null,
+          accountId: accountId || null,
+          description: description.trim(),
+          frequency: repeat,
+          every: Math.min(12, Math.max(1, Math.trunc(Number(every)) || 1)),
+          startDate: date,
+          untilDate: until || null,
+        },
+        done,
+      )
+      return
+    }
     save.mutate(
       {
         id: movement?.id,
@@ -80,12 +115,7 @@ export function MovementEditor({ movement, initialKind = 'EXPENSE', onClose }: M
           tags: movementTags,
         },
       },
-      {
-        onSuccess: () => {
-          toast(t('common.saved'))
-          onClose()
-        },
-      },
+      done,
     )
   }
 
@@ -112,13 +142,14 @@ export function MovementEditor({ movement, initialKind = 'EXPENSE', onClose }: M
           <button type="button" className="button button-secondary" onClick={onClose}>
             {t('common.cancel')}
           </button>
-          <button type="submit" form="movement-form" className="button button-primary" disabled={save.isPending}>
-            {save.isPending ? t('common.saving') : t('common.save')}
+          <button type="submit" form="movement-form" className="button button-primary" disabled={pending}>
+            {pending ? t('common.saving') : t('common.save')}
           </button>
         </>
       }
     >
       <form id="movement-form" className="stack" onSubmit={onSubmit} noValidate>
+        {movement?.recurringId && <p className="alert alert-info">{t('finance.recurring.generated')}</p>}
         {error && Object.keys(fieldErrors).length === 0 && (
           <div className="alert alert-error" role="alert">
             {error.message}
@@ -176,9 +207,51 @@ export function MovementEditor({ movement, initialKind = 'EXPENSE', onClose }: M
           {fieldErrors.categoryId && <p className="field-error">{fieldErrors.categoryId}</p>}
         </div>
 
-        <Field label={t('finance.form.date')} id="movement-date" error={fieldErrors.date}>
+        <Field
+          label={repeat ? t('finance.recurring.startDate') : t('finance.form.date')}
+          id="movement-date"
+          error={fieldErrors.date ?? fieldErrors.startDate}
+        >
           <input id="movement-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </Field>
+
+        {!movement && (
+          <div className="stack-sm">
+            <Field label={t('finance.recurring.repeat')} id="movement-repeat" error={fieldErrors.frequency}>
+              <select
+                id="movement-repeat"
+                value={repeat}
+                onChange={(e) => setRepeat(e.target.value as RecurringFrequency | '')}
+              >
+                <option value="">{t('finance.recurring.never')}</option>
+                {RECURRING_FREQUENCIES.map((frequency) => (
+                  <option key={frequency} value={frequency}>
+                    {t(`finance.recurring.frequency.${frequency}`)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            {repeat && (
+              <div className="field-row">
+                <Field label={t('finance.recurring.interval')} id="movement-every" error={fieldErrors.every}>
+                  <input
+                    id="movement-every"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={12}
+                    value={every}
+                    onChange={(e) => setEvery(e.target.value)}
+                  />
+                </Field>
+                <Field label={t('finance.recurring.until')} id="movement-until" error={fieldErrors.untilDate}>
+                  <input id="movement-until" type="date" value={until} min={date} onChange={(e) => setUntil(e.target.value)} />
+                </Field>
+              </div>
+            )}
+            {repeat && <p className="muted small">{t('finance.recurring.formHelp')}</p>}
+          </div>
+        )}
 
         <Field label={t('finance.form.description')} id="movement-description" error={fieldErrors.description}>
           <input
@@ -231,6 +304,7 @@ export function MovementEditor({ movement, initialKind = 'EXPENSE', onClose }: M
           )}
         </div>
 
+        {!repeat && (
         <div className="stack-sm">
           <label className="field-label" htmlFor="movement-tags">
             {t('finance.form.tags')}
@@ -243,6 +317,7 @@ export function MovementEditor({ movement, initialKind = 'EXPENSE', onClose }: M
           />
           {fieldErrors.tags && <p className="field-error">{fieldErrors.tags}</p>}
         </div>
+        )}
       </form>
 
       {movement && (

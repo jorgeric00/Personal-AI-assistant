@@ -2,6 +2,7 @@ package com.lifeos.finance;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -15,6 +16,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,14 +45,18 @@ public class MovementService {
     private final MovementRepository movements;
     private final FinanceCatalogService catalog;
     private final FinanceSetupService setup;
+    private final RecurringService recurring;
+    private final ApplicationEventPublisher events;
     private final EntityManager entityManager;
     private final Clock clock;
 
     public MovementService(MovementRepository movements, FinanceCatalogService catalog, FinanceSetupService setup,
-            EntityManager entityManager, Clock clock) {
+            RecurringService recurring, ApplicationEventPublisher events, EntityManager entityManager, Clock clock) {
         this.movements = movements;
         this.catalog = catalog;
         this.setup = setup;
+        this.recurring = recurring;
+        this.events = events;
         this.entityManager = entityManager;
         this.clock = clock;
     }
@@ -59,6 +65,7 @@ public class MovementService {
     @Transactional(readOnly = true)
     public MovementPage list(UUID userId, Filter filter, int page, int size) {
         String currency = setup.currency(userId);
+        recurring.generateDue(userId);
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
         CriteriaQuery<Movement> query = cb.createQuery(Movement.class);
@@ -100,19 +107,32 @@ public class MovementService {
     public MovementResponse create(UUID userId, MovementRequest request) {
         Movement movement = new Movement(userId, setup.currency(userId), clock.instant());
         apply(userId, movement, request);
+        changed(movement);
         return toResponse(movements.save(movement));
     }
 
     @Transactional
     public MovementResponse update(UUID userId, UUID id, MovementRequest request) {
         Movement movement = load(userId, id);
+        Set<UUID> categories = new java.util.HashSet<>(Set.of(movement.getCategory().getId()));
+        Set<YearMonth> months = new java.util.HashSet<>(Set.of(YearMonth.from(movement.getDate())));
         apply(userId, movement, request);
+        categories.add(movement.getCategory().getId());
+        months.add(YearMonth.from(movement.getDate()));
+        events.publishEvent(new MovementsChanged(userId, categories, months));
         return toResponse(movement);
     }
 
     @Transactional
     public void delete(UUID userId, UUID id) {
-        movements.delete(load(userId, id));
+        Movement movement = load(userId, id);
+        changed(movement);
+        movements.delete(movement);
+    }
+
+    private void changed(Movement movement) {
+        events.publishEvent(new MovementsChanged(movement.getUserId(), Set.of(movement.getCategory().getId()),
+                Set.of(YearMonth.from(movement.getDate()))));
     }
 
     @Transactional(readOnly = true)
@@ -171,6 +191,8 @@ public class MovementService {
         return new MovementResponse(movement.getId(), movement.getKind(), movement.getAmountCents(),
                 movement.getCurrency(), movement.getDate(), CategoryResponse.from(movement.getCategory()),
                 AccountResponse.from(movement.getAccount()), movement.getDescription(),
-                movement.getTags().stream().sorted().toList(), movement.getCreatedAt(), movement.getUpdatedAt());
+                movement.getTags().stream().sorted().toList(),
+                movement.getRecurring() == null ? null : movement.getRecurring().getId(), movement.getCreatedAt(),
+                movement.getUpdatedAt());
     }
 }

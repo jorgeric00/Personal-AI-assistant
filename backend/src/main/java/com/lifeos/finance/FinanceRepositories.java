@@ -6,7 +6,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
@@ -52,6 +55,29 @@ interface MovementRepository extends JpaRepository<Movement, UUID> {
     Optional<Movement> findByIdAndUserId(UUID id, UUID userId);
 
     boolean existsByCategoryId(UUID categoryId);
+
+    @Query("""
+            select coalesce(sum(m.amountCents), 0) from Movement m
+            where m.userId = :userId and m.category.id = :categoryId and m.kind = com.lifeos.finance.MovementKind.EXPENSE
+              and m.date between :from and :to
+            """)
+    long sumExpense(UUID userId, UUID categoryId, LocalDate from, LocalDate to);
+
+    /** Movimientos para exportar, en orden cronológico. */
+    @Query("""
+            select m from Movement m join fetch m.category left join fetch m.account
+            where m.userId = :userId and m.date between :from and :to
+            order by m.date asc, m.createdAt asc
+            """)
+    List<Movement> findForExport(UUID userId, LocalDate from, LocalDate to);
+
+    @Query("""
+            select count(m) from Movement m
+            where m.userId = :userId and m.kind = :kind and m.amountCents = :amountCents and m.date = :date
+              and m.category.id = :categoryId and m.description = :description
+            """)
+    long countSame(UUID userId, MovementKind kind, long amountCents, LocalDate date, UUID categoryId,
+            String description);
 
     /** Sumas por categoría y tipo en un intervalo de fechas. */
     @Query("""
@@ -113,4 +139,41 @@ interface MovementRepository extends JpaRepository<Movement, UUID> {
 
         long getCount();
     }
+}
+
+interface RecurringRepository extends JpaRepository<Recurring, UUID> {
+
+    @Query("""
+            select r from Recurring r join fetch r.category left join fetch r.account
+            where r.userId = :userId order by r.nextDate asc nulls last, r.createdAt asc
+            """)
+    List<Recurring> findAllForUser(UUID userId);
+
+    Optional<Recurring> findByIdAndUserId(UUID id, UUID userId);
+
+    /** Reglas con apariciones pendientes, bloqueadas para que dos procesos no generen la misma. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Recurring r where r.userId = :userId and r.nextDate <= :today")
+    List<Recurring> lockDueForUser(UUID userId, LocalDate today);
+
+    @Query("select distinct r.userId from Recurring r where r.nextDate <= :today")
+    List<UUID> findUsersWithDue(LocalDate today);
+}
+
+interface BudgetRepository extends JpaRepository<Budget, UUID> {
+
+    @Query("select b from Budget b join fetch b.category where b.userId = :userId")
+    List<Budget> findAllForUser(UUID userId);
+
+    Optional<Budget> findByCategoryId(UUID categoryId);
+
+    Optional<Budget> findByIdAndUserId(UUID id, UUID userId);
+
+    /** Registra un aviso; devuelve 1 solo la primera vez para ese presupuesto, mes y nivel. */
+    @Modifying
+    @Query(value = """
+            insert into finance_budget_alert (budget_id, month, level, sent_at) values (:budgetId, :month, :level, :now)
+            on conflict do nothing
+            """, nativeQuery = true)
+    int insertAlert(UUID budgetId, String month, String level, Instant now);
 }

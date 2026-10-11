@@ -56,6 +56,14 @@ public class Movement {
     @Column(nullable = false)
     private String description;
 
+    /** Regla de la que procede, si se generó automáticamente. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recurring_id")
+    private Recurring recurring;
+
+    @Column(name = "occurrence_date")
+    private LocalDate occurrenceDate;
+
     @Column(name = "search_text", nullable = false)
     private String searchText;
 
@@ -79,6 +87,16 @@ public class Movement {
         this.userId = userId;
         this.currency = currency;
         this.createdAt = now;
+    }
+
+    /** Movimiento generado por una regla recurrente para una de sus apariciones. */
+    public static Movement fromRecurring(Recurring rule, LocalDate occurrence, Instant now) {
+        Movement movement = new Movement(rule.getUserId(), rule.getCurrency(), now);
+        movement.recurring = rule;
+        movement.occurrenceDate = occurrence;
+        movement.edit(rule.getKind(), rule.getAmountCents(), occurrence, rule.getCategory(), rule.getAccount(),
+                rule.getDescription(), Set.of(), now);
+        return movement;
     }
 
     public void edit(MovementKind kind, long amountCents, LocalDate date, FinanceCategory category,
@@ -129,6 +147,10 @@ public class Movement {
 
     public String getDescription() {
         return description;
+    }
+
+    public Recurring getRecurring() {
+        return recurring;
     }
 
     public Set<String> getTags() {

@@ -28,6 +28,8 @@ export interface Movement {
   account: FinanceAccount | null
   description: string
   tags: string[]
+  /** Regla recurrente que generó el movimiento, si la hay. */
+  recurringId: string | null
   createdAt: string
   updatedAt: string
 }
@@ -106,6 +108,8 @@ const keys = {
   categories: ['finance', 'categories'] as const,
   accounts: ['finance', 'accounts'] as const,
   tags: ['finance', 'tags'] as const,
+  budgets: (month: string) => ['finance', 'budgets', month] as const,
+  recurring: ['finance', 'recurring'] as const,
 }
 
 function query(params: Record<string, string | number | undefined>) {
@@ -216,6 +220,106 @@ export function useSaveAccount() {
 
 export function useDeleteAccount() {
   return useFinanceMutation((id: string) => apiFetch<void>(`/api/finance/accounts/${id}`, { method: 'DELETE' }))
+}
+
+export type BudgetLevel = 'OK' | 'WARNING' | 'EXCEEDED'
+
+export interface BudgetStatus {
+  id: string
+  category: FinanceCategory
+  amountCents: number
+  spentCents: number
+  currency: string
+  level: BudgetLevel
+}
+
+export function useBudgets(month: string) {
+  return useQuery({
+    queryKey: keys.budgets(month),
+    queryFn: () => apiFetch<BudgetStatus[]>(`/api/finance/budgets?month=${month}`),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useSetBudget() {
+  return useFinanceMutation((input: { categoryId: string; amountCents: number }) =>
+    apiFetch<BudgetStatus>('/api/finance/budgets', { method: 'PUT', body: input }),
+  )
+}
+
+export function useDeleteBudget() {
+  return useFinanceMutation((id: string) => apiFetch<void>(`/api/finance/budgets/${id}`, { method: 'DELETE' }))
+}
+
+export type RecurringFrequency = 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+export const RECURRING_FREQUENCIES: RecurringFrequency[] = ['WEEKLY', 'MONTHLY', 'YEARLY']
+
+export interface RecurringInput {
+  kind: MovementKind
+  amountCents: number
+  categoryId: string | null
+  accountId: string | null
+  description: string
+  frequency: RecurringFrequency
+  every: number
+  startDate: string
+  untilDate: string | null
+}
+
+export interface Recurring {
+  id: string
+  kind: MovementKind
+  amountCents: number
+  currency: string
+  category: FinanceCategory
+  account: FinanceAccount | null
+  description: string | null
+  frequency: RecurringFrequency
+  every: number
+  startDate: string
+  untilDate: string | null
+  /** Próxima fecha en la que se generará un movimiento; null si la regla ya terminó. */
+  nextDate: string | null
+}
+
+export function useRecurring() {
+  return useQuery({ queryKey: keys.recurring, queryFn: () => apiFetch<Recurring[]>('/api/finance/recurring') })
+}
+
+export function useCreateRecurring() {
+  return useFinanceMutation((input: RecurringInput) =>
+    apiFetch<Recurring>('/api/finance/recurring', { method: 'POST', body: input }),
+  )
+}
+
+export function useStopRecurring() {
+  return useFinanceMutation((id: string) => apiFetch<Recurring>(`/api/finance/recurring/${id}/stop`, { method: 'POST' }))
+}
+
+export function useDeleteRecurring() {
+  return useFinanceMutation((id: string) => apiFetch<void>(`/api/finance/recurring/${id}`, { method: 'DELETE' }))
+}
+
+export interface ImportResult {
+  imported: number
+  skippedDuplicates: number
+  createdCategories: string[]
+  createdAccounts: string[]
+  errors: { line: number; message: string }[]
+}
+
+export function useImportCsv() {
+  return useFinanceMutation((file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return apiFetch<ImportResult>('/api/finance/import', { method: 'POST', body: form })
+  })
+}
+
+/** URL de descarga del CSV; el navegador envía la cookie de sesión al ser del mismo origen. */
+export function exportUrl(filters: Pick<MovementFilters, 'from' | 'to'> = {}) {
+  const params = query({ from: filters.from, to: filters.to })
+  return `/api/finance/export${params ? `?${params}` : ''}`
 }
 
 /** «2026-10» desplazado n meses. */

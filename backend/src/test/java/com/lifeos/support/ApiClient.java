@@ -69,6 +69,17 @@ public final class ApiClient {
         return send(request);
     }
 
+    /** Envía una petición arbitraria (p. ej. multipart), añadiendo el token CSRF si se pide. */
+    public HttpResponse<String> send(HttpRequest.Builder request, boolean csrf) {
+        if (csrf) {
+            if (csrfCookie() == null) {
+                assertThat(get("/api/auth/csrf").statusCode()).isEqualTo(200);
+            }
+            request.header("X-XSRF-TOKEN", csrfCookie().getValue());
+        }
+        return send(request);
+    }
+
     private HttpCookie csrfCookie() {
         return cookies.getCookieStore().getCookies().stream()
                 .filter(c -> c.getName().equals("XSRF-TOKEN"))

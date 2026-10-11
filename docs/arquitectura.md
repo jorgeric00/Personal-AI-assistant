@@ -39,7 +39,10 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | Moneda por usuario y por movimiento | EUR por defecto en `finance_settings`; cada movimiento guarda su moneda para poder permitir otras en el futuro. Mientras no haya conversión, los resúmenes asumen una sola moneda. |
 | Categorías iniciales al usar el módulo por primera vez | Se crean en el idioma de la cuenta y son editables. Una categoría con movimientos no se borra, se archiva: deja de ofrecerse para movimientos nuevos y se conserva en el historial. La creación es idempotente (`insert … on conflict do nothing`). |
 | Resúmenes calculados en la base de datos | Totales por mes, por categoría y ahorro acumulado (ingresos menos gastos desde el primer movimiento) con `sum` sobre enteros. Los gráficos son SVG propios, sin librerías, con una tabla oculta para lectores de pantalla. |
-| Preparado para importar del banco más adelante | Las cuentas son una entidad propia y los movimientos no dependen de ningún proveedor; no se piden credenciales bancarias. |
+| Presupuestos mensuales por categoría de gasto | Un límite por categoría que se aplica a cada mes. Al guardar, cambiar o borrar un movimiento del mes actual se recalcula lo gastado y, al pasar del 80 % o del 100 %, se envía una notificación push. `finance_budget_alert` (presupuesto + mes + nivel) garantiza un solo aviso por nivel y mes. El cálculo va después de confirmar la transacción para no retrasar ni romper el guardado. |
+| Movimientos recurrentes que generan movimientos reales | Una regla (semanal, mensual o anual, cada 1–12, con fecha de fin opcional) crea un movimiento normal en cada fecha: al crearla se generan las fechas ya pasadas (hasta 5 años), una tarea programada cada hora genera las nuevas y también se generan al consultar movimientos o resúmenes. El índice único `(recurring_id, occurrence_date)` y un bloqueo de la regla impiden duplicados. Los meses cortos usan el último día (el 31 pasa a 30 o 28). Detener o borrar una regla conserva los movimientos ya generados, que se pueden editar uno a uno. |
+| Exportación e importación CSV | El mismo formato en los dos sentidos (`date,type,amount,currency,category,account,description,tags`, UTF-8 con BOM para Excel). La importación acepta también `;`, cabeceras en español, «ingreso/gasto» y coma decimal; es todo o nada (si una línea falla no se guarda ninguna y se indica la línea), crea las categorías y cuentas que falten y no duplica movimientos idénticos ya existentes, así se puede reimportar una copia sin riesgo. Las celdas que empiezan por `=`, `+`, `-` o `@` se exportan escapadas para que una hoja de cálculo no las ejecute como fórmulas. |
+| Preparado para importar del banco más adelante | Las cuentas son una entidad propia y los movimientos no dependen de ningún proveedor; no se piden credenciales bancarias. Los extractos se pueden traer en CSV. |
 | Migraciones con Flyway, `ddl-auto: validate` | El esquema solo cambia con migraciones versionadas. |
 | Pruebas de integración con Testcontainers | Se prueba contra PostgreSQL real, no contra una base de datos en memoria. |
 
@@ -68,8 +71,11 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | `finance_settings` | Moneda del usuario (EUR por defecto). |
 | `finance_category` | Categorías de ingresos y de gastos: nombre, color y si está archivada. |
 | `finance_account` | Cuentas o métodos de pago (opcionales en cada movimiento). |
-| `finance_movement` | Movimientos: tipo, importe en céntimos, moneda, fecha, categoría, cuenta, descripción y texto de búsqueda. |
+| `finance_movement` | Movimientos: tipo, importe en céntimos, moneda, fecha, categoría, cuenta, descripción, texto de búsqueda y, si lo generó una regla, la regla y la fecha de su aparición. |
 | `finance_movement_tag` | Etiquetas de cada movimiento. |
+| `finance_budget` | Límite mensual en céntimos por categoría de gasto (uno por categoría). |
+| `finance_budget_alert` | Avisos de presupuesto ya enviados por mes y nivel (80 % o superado). |
+| `finance_recurring` | Reglas de movimientos recurrentes: importe, categoría, cuenta, descripción, frecuencia, cada cuántos, inicio, fin y próxima fecha. Los movimientos generados guardan `recurring_id` y la fecha de su aparición. |
 
 ## Riesgos y temas abiertos
 

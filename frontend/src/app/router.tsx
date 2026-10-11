@@ -3,6 +3,7 @@ import { Navigate, type RouteObject } from 'react-router'
 import { LoginPage } from '../auth/LoginPage'
 import { RequireAuth } from '../auth/RequireAuth'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
+import { FinancePage } from '../features/finance/FinancePage'
 import { NotesPage } from '../features/notes/NotesPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { TasksPage } from '../features/tasks/TasksPage'
@@ -18,6 +19,7 @@ export const routes: RouteObject[] = [
         children: [
           { index: true, element: <DashboardPage /> },
           { path: 'tareas', element: <TasksPage /> },
+          { path: 'finanzas', element: <FinancePage /> },
           { path: 'notas', element: <NotesPage /> },
           { path: 'ajustes', element: <SettingsPage /> },
         ],

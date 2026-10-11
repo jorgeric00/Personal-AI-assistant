@@ -1,7 +1,7 @@
 import { useId, useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { CloseIcon } from '../../ui/icons'
+import { CloseIcon } from './icons'
 
 interface TagInputProps {
   id: string
@@ -52,7 +52,7 @@ export function TagInput({ id, value, onChange, suggestions, readOnly = false }:
             <button
               type="button"
               className="tag-remove"
-              aria-label={t('notes.tags.remove', { tag })}
+              aria-label={t('common.tags.remove', { tag })}
               onClick={() => onChange(value.filter((item) => item !== tag))}
             >
               <CloseIcon />
@@ -66,7 +66,7 @@ export function TagInput({ id, value, onChange, suggestions, readOnly = false }:
             id={id}
             value={text}
             list={listId}
-            placeholder={value.length === 0 ? t('notes.tags.placeholder') : t('notes.tags.add')}
+            placeholder={value.length === 0 ? t('common.tags.placeholder') : t('common.tags.add')}
             autoCapitalize="none"
             enterKeyHint="done"
             onChange={(event) => {

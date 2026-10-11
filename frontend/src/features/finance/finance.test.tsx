@@ -30,6 +30,7 @@ function movement(overrides: Partial<Movement>): Movement {
     account: null,
     description: 'Mercadona',
     tags: [],
+    recurringId: null,
     createdAt: '2026-10-11T10:00:00Z',
     updatedAt: '2026-10-11T10:00:00Z',
     ...overrides,
@@ -206,5 +207,177 @@ describe('finanzas', () => {
     const section = await screen.findByRole('region', { name: 'Este mes' })
     await waitFor(() => expect(text(section)).toContain('+1899,90 €'))
     expect(screen.getByRole('link', { name: 'Gasto' })).toHaveAttribute('href', '/finanzas?nuevo=EXPENSE')
+  })
+
+  it('muestra los presupuestos con su nivel de aviso en el resumen y permite añadir uno', async () => {
+    let saved: unknown = null
+    const leisure: FinanceCategory = { id: 'cat-5', kind: 'EXPENSE', name: 'Ocio', color: '#db2777', archived: false }
+    const budget = (id: string, category: FinanceCategory, amountCents: number, spentCents: number, level: string) => ({
+      id,
+      category,
+      amountCents,
+      spentCents,
+      currency: 'EUR',
+      level,
+    })
+    mockFetch({
+      'GET /api/auth/me': () => json(testUser),
+      'GET /api/finance/summary?month=2026-10': () => json(summary),
+      'GET /api/finance/trend?to=2026-10&months=6': () => json(trend),
+      'GET /api/finance/budgets?month=2026-10': () =>
+        json([budget('b1', groceries, 50000, 45010, 'WARNING'), budget('b2', transport, 10000, 15000, 'EXCEEDED')]),
+      'GET /api/finance/categories': () => json([...categories, leisure]),
+      'GET /api/finance/recurring': () => json([]),
+      'GET /api/auth/csrf': csrf,
+      'PUT /api/finance/budgets': (init) => {
+        saved = body(init)
+        return json(budget('b3', leisure, 2000, 0, 'OK'))
+      },
+    })
+    renderApp('/finanzas')
+    const user = userEvent.setup()
+
+    expect(
+      await screen.findByText('Casi has agotado el presupuesto de Supermercado. Has superado el presupuesto de Transporte.'),
+    ).toBeInTheDocument()
+    const summaryBudgets = screen.getByRole('heading', { name: 'Presupuestos del mes' }).closest('section')!
+    expect(within(summaryBudgets).getByRole('progressbar', { name: 'Transporte' })).toHaveAttribute('aria-valuenow', '100')
+    expect(text(summaryBudgets)).toContain('te has pasado 50,00 €')
+    expect(text(summaryBudgets)).toContain('quedan 49,90 €')
+
+    await user.click(within(summaryBudgets).getByRole('button', { name: 'Gestionar' }))
+    expect(await screen.findByText('No tienes movimientos recurrentes.')).toBeInTheDocument()
+    const budgets = screen.getByRole('heading', { name: 'Presupuestos del mes' }).closest('section')!
+    await user.click(within(budgets).getByRole('button', { name: 'Añadir' }))
+    // Solo se ofrecen categorías de gasto activas que aún no tienen presupuesto
+    const select = within(budgets).getByLabelText('Categoría')
+    expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual(['Elige una categoría', 'Ocio'])
+    await user.selectOptions(select, 'cat-5')
+    await user.type(within(budgets).getByLabelText('Límite mensual'), '20')
+    await user.click(within(budgets).getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(saved).toEqual({ categoryId: 'cat-5', amountCents: 2000 }))
+  })
+
+  it('crea un movimiento recurrente desde el formulario con «Repetir»', async () => {
+    let created: unknown = null
+    mockFetch({
+      'GET /api/auth/me': () => json(testUser),
+      'GET /api/finance/categories': () => json(categories),
+      'GET /api/finance/accounts': () => json([]),
+      'GET /api/finance/tags': () => json([]),
+      'GET /api/finance/recurring': () => json([]),
+      'GET /api/auth/csrf': csrf,
+      'POST /api/finance/recurring': (init) => {
+        created = body(init)
+        return json({ id: 'r1' }, 201)
+      },
+    })
+    renderApp('/finanzas?vista=BUDGETS')
+    const user = userEvent.setup()
+
+    const recurring = (await screen.findByRole('heading', { name: 'Movimientos recurrentes' })).closest('section')!
+    await user.click(within(recurring).getByRole('button', { name: 'Añadir' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Nuevo gasto' })
+    expect(within(dialog).getByLabelText('Repetir')).toHaveValue('MONTHLY')
+    // Las etiquetas no se aplican a los recurrentes
+    expect(within(dialog).queryByLabelText('Etiquetas')).toBeNull()
+
+    await user.type(within(dialog).getByLabelText('Importe'), '650')
+    await user.click(await within(dialog).findByRole('radio', { name: 'Transporte' }))
+    await user.type(within(dialog).getByLabelText('Descripción'), 'Abono')
+    await user.clear(within(dialog).getByLabelText('Primera fecha'))
+    await user.type(within(dialog).getByLabelText('Primera fecha'), '2026-10-01')
+    await user.clear(within(dialog).getByLabelText('Cada cuántos (1–12)'))
+    await user.type(within(dialog).getByLabelText('Cada cuántos (1–12)'), '40')
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() =>
+      expect(created).toEqual({
+        kind: 'EXPENSE',
+        amountCents: 65000,
+        categoryId: 'cat-2',
+        accountId: null,
+        description: 'Abono',
+        frequency: 'MONTHLY',
+        every: 12,
+        startDate: '2026-10-01',
+        untilDate: null,
+      }),
+    )
+  })
+
+  it('lista los recurrentes y permite detenerlos; marca los movimientos generados', async () => {
+    let stopped = false
+    const rule = {
+      id: 'r1',
+      kind: 'INCOME',
+      amountCents: 250000,
+      currency: 'EUR',
+      category: salary,
+      account: null,
+      description: 'Nómina',
+      frequency: 'MONTHLY',
+      every: 1,
+      startDate: '2026-01-28',
+      untilDate: null,
+      nextDate: '2026-10-28',
+    }
+    mockFetch({
+      'GET /api/auth/me': () => json(testUser),
+      'GET /api/finance/categories': () => json(categories),
+      'GET /api/finance/recurring': () => json(stopped ? [{ ...rule, nextDate: null }] : [rule]),
+      'GET /api/auth/csrf': csrf,
+      'POST /api/finance/recurring/r1/stop': () => {
+        stopped = true
+        return json({ ...rule, nextDate: null })
+      },
+      'GET /api/finance/movements?page=0&size=50': () =>
+        json(page([movement({ id: 'g1', kind: 'INCOME', category: salary, description: 'Nómina', recurringId: 'r1' })])),
+    })
+    const { router } = renderApp('/finanzas?vista=BUDGETS')
+    const user = userEvent.setup()
+
+    const recurring = (await screen.findByRole('heading', { name: 'Movimientos recurrentes' })).closest('section')!
+    await waitFor(() => expect(text(recurring)).toContain('Cada mes · próximo: mié, 28 oct'))
+    expect(text(recurring)).toContain('+2500,00 €')
+    await user.click(within(recurring).getByRole('button', { name: 'Detener' }))
+    await waitFor(() => expect(text(recurring)).toContain('terminado'))
+    expect(within(recurring).queryByRole('button', { name: 'Detener' })).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'Movimientos' }))
+    expect(router.state.location.search).toContain('vista=MOVEMENTS')
+    expect(await screen.findByText('Recurrente:')).toBeInTheDocument()
+  })
+
+  it('exporta con las fechas filtradas e informa de los errores al importar un CSV', async () => {
+    let uploaded: FormData | null = null
+    mockFetch({
+      'GET /api/auth/me': () => json(testUser),
+      'GET /api/finance/categories': () => json(categories),
+      'GET /api/finance/movements?from=2026-10-01&to=2026-10-31&page=0&size=50': () => json(page([])),
+      'GET /api/auth/csrf': csrf,
+      'POST /api/finance/import': (init) => {
+        uploaded = init?.body as FormData
+        return json({
+          imported: 0,
+          skippedDuplicates: 0,
+          createdCategories: [],
+          createdAccounts: [],
+          errors: [{ line: 3, message: 'Importe no válido: «abc»' }],
+        })
+      },
+    })
+    renderApp('/finanzas?vista=MOVEMENTS&desde=2026-10-01&hasta=2026-10-31')
+    const user = userEvent.setup()
+
+    const link = await screen.findByRole('link', { name: 'Exportar CSV de estas fechas' })
+    expect(link).toHaveAttribute('href', '/api/finance/export?from=2026-10-01&to=2026-10-31')
+
+    const file = new File(['fecha;tipo;importe;categoría\n'], 'banco.csv', { type: 'text/csv' })
+    await user.upload(screen.getByTestId('csv-file'), file)
+    const alert = await screen.findByRole('alert')
+    expect(text(alert)).toContain('No se ha importado nada: hay 1 error que corregir.')
+    expect(text(alert)).toContain('Línea 3: Importe no válido: «abc»')
+    expect((uploaded as FormData | null)?.get('file')).toBeInstanceOf(File)
   })
 })

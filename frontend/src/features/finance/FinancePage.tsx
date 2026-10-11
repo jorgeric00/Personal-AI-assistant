@@ -6,16 +6,18 @@ import { useSearchParams } from 'react-router'
 import { useDateFormat } from '../../lib/useRelativeDate'
 import { PlusIcon } from '../../ui/icons'
 import { monthRange, useMovement, type MovementFilters, type MovementKind } from './api'
+import { BudgetsView } from './BudgetsView'
 import { CategoriesView } from './CategoriesView'
 import { MovementEditor } from './MovementEditor'
 import { MovementsView } from './MovementsView'
 import { SummaryView } from './SummaryView'
 
-type Tab = 'SUMMARY' | 'MOVEMENTS' | 'CATEGORIES'
+type Tab = 'SUMMARY' | 'MOVEMENTS' | 'BUDGETS' | 'CATEGORIES'
 
 const TABS: { value: Tab; label: ParseKeys }[] = [
   { value: 'SUMMARY', label: 'finance.views.summary' },
   { value: 'MOVEMENTS', label: 'finance.views.movements' },
+  { value: 'BUDGETS', label: 'finance.views.budgets' },
   { value: 'CATEGORIES', label: 'finance.views.categories' },
 ]
 
@@ -29,7 +31,7 @@ const FILTER_PARAMS: Record<keyof MovementFilters, string> = {
 }
 
 /**
- * Pantalla de finanzas. El estado vive en la URL (?vista, ?mes, filtros, ?movimiento, ?nuevo) para que los
+ * Pantalla de finanzas. El estado vive en la URL (?vista, ?mes, filtros, ?movimiento, ?nuevo, ?repetir) para que los
  * accesos rápidos abran directamente el formulario y se pueda volver atrás sin perder los filtros.
  */
 export function FinancePage() {
@@ -107,6 +109,7 @@ export function FinancePage() {
           month={month}
           currentMonth={currentMonth}
           onMonthChange={(next) => update({ mes: next === currentMonth ? null : next })}
+          onOpenBudgets={() => update({ vista: 'BUDGETS' })}
           onSelectCategory={(categoryId) => {
             const { from, to } = monthRange(month)
             update({ vista: 'MOVEMENTS', categoria: categoryId, tipo: 'EXPENSE', desde: from, hasta: to, q: null })
@@ -116,14 +119,16 @@ export function FinancePage() {
       {tab === 'MOVEMENTS' && (
         <MovementsView filters={filters} onFiltersChange={updateFilters} onOpen={(id) => update({ movimiento: id })} />
       )}
+      {tab === 'BUDGETS' && <BudgetsView month={currentMonth} onAddRecurring={() => update({ nuevo: 'EXPENSE', repetir: '1' })} />}
       {tab === 'CATEGORIES' && <CategoriesView />}
 
       {(newKind || (editingId && editing.data)) && (
         <MovementEditor
-          key={editingId ?? newKind ?? ''}
+          key={editingId ?? `${newKind}-${params.get('repetir') ?? ''}`}
           movement={editingId ? (editing.data ?? null) : null}
           initialKind={newKind === 'INCOME' ? 'INCOME' : 'EXPENSE'}
-          onClose={() => update({ movimiento: null, nuevo: null })}
+          initialRepeat={params.get('repetir') === '1'}
+          onClose={() => update({ movimiento: null, nuevo: null, repetir: null })}
         />
       )}
     </div>

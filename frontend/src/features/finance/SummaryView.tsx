@@ -4,7 +4,8 @@ import { formatMonthYear } from '../../lib/date'
 import { formatMoney } from '../../lib/money'
 import { useDateFormat } from '../../lib/useRelativeDate'
 import { ChevronLeftIcon, ChevronRightIcon } from '../../ui/icons'
-import { shiftMonth, useMonthSummary, useTrend, type Totals } from './api'
+import { shiftMonth, useBudgets, useMonthSummary, useTrend, type Totals } from './api'
+import { BudgetBar } from './BudgetsView'
 import { CategoryBars, IncomeExpenseChart, SavingsChart } from './charts'
 
 const TREND_MONTHS = 6
@@ -14,13 +15,17 @@ interface SummaryViewProps {
   currentMonth: string
   onMonthChange: (month: string) => void
   onSelectCategory: (categoryId: string) => void
+  onOpenBudgets: () => void
 }
 
-export function SummaryView({ month, currentMonth, onMonthChange, onSelectCategory }: SummaryViewProps) {
+export function SummaryView({ month, currentMonth, onMonthChange, onSelectCategory, onOpenBudgets }: SummaryViewProps) {
   const { t } = useTranslation()
   const { locale } = useDateFormat()
   const summary = useMonthSummary(month)
   const trend = useTrend(month, TREND_MONTHS)
+  const budgets = useBudgets(month)
+  const budgetList = budgets.data ?? []
+  const alerts = budgetList.filter((budget) => budget.level !== 'OK')
 
   const data = summary.data
   const currency = data?.currency ?? 'EUR'
@@ -72,6 +77,38 @@ export function SummaryView({ month, currentMonth, onMonthChange, onSelectCatego
             />
           </div>
           <Comparison current={data.totals} previous={data.previousTotals} previousName={previousName} money={money} />
+
+          {alerts.length > 0 && (
+            <div className="alert alert-warning" role="status">
+              {alerts
+                .map((budget) =>
+                  t(budget.level === 'EXCEEDED' ? 'finance.budgets.alertExceeded' : 'finance.budgets.alertWarning', {
+                    category: budget.category.name,
+                  }),
+                )
+                .join(' ')}
+            </div>
+          )}
+
+          {budgetList.length > 0 && (
+            <section className="card stack" aria-labelledby="summary-budgets-title">
+              <div className="section-header">
+                <h3 id="summary-budgets-title" className="h3">
+                  {t('finance.budgets.title')}
+                </h3>
+                <button type="button" className="link link-button" onClick={onOpenBudgets}>
+                  {t('finance.budgets.manage')}
+                </button>
+              </div>
+              <ul className="list-plain stack">
+                {budgetList.map((budget) => (
+                  <li key={budget.id}>
+                    <BudgetBar budget={budget} locale={locale} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           <section className="card stack" aria-labelledby="by-category-title">
             <h3 id="by-category-title" className="h3">

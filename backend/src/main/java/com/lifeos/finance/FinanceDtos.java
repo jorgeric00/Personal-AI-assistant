@@ -59,9 +59,57 @@ public final class FinanceDtos {
             @Size(max = 20, message = "{finance.movement.tags.too-many}") List<String> tags) {
     }
 
+    /** recurringId indica que el movimiento lo generó una regla recurrente. */
     public record MovementResponse(UUID id, MovementKind kind, long amountCents, String currency, LocalDate date,
             CategoryResponse category, AccountResponse account, String description, List<String> tags,
-            Instant createdAt, Instant updatedAt) {
+            UUID recurringId, Instant createdAt, Instant updatedAt) {
+    }
+
+    public record RecurringRequest(
+            @NotNull(message = "{finance.movement.kind.required}") MovementKind kind,
+            @NotNull(message = "{finance.movement.amount.invalid}")
+            @Min(value = 1, message = "{finance.movement.amount.invalid}")
+            @Max(value = 100_000_000_000L, message = "{finance.movement.amount.too-big}") Long amountCents,
+            @NotNull(message = "{finance.movement.category.required}") UUID categoryId,
+            UUID accountId,
+            @Size(max = 200, message = "{finance.movement.description.too-long}") String description,
+            @NotNull(message = "{finance.recurring.frequency.required}") Recurring.Frequency frequency,
+            @NotNull(message = "{finance.recurring.every.invalid}")
+            @Min(value = 1, message = "{finance.recurring.every.invalid}")
+            @Max(value = 12, message = "{finance.recurring.every.invalid}") Integer every,
+            @NotNull(message = "{finance.movement.date.required}") LocalDate startDate,
+            LocalDate untilDate) {
+    }
+
+    public record RecurringResponse(UUID id, MovementKind kind, long amountCents, String currency,
+            CategoryResponse category, AccountResponse account, String description, Recurring.Frequency frequency,
+            int every, LocalDate startDate, LocalDate untilDate, LocalDate nextDate) {
+
+        static RecurringResponse from(Recurring rule) {
+            return new RecurringResponse(rule.getId(), rule.getKind(), rule.getAmountCents(), rule.getCurrency(),
+                    CategoryResponse.from(rule.getCategory()), AccountResponse.from(rule.getAccount()),
+                    rule.getDescription(), rule.getFrequency(), rule.getEvery(), rule.getStartDate(),
+                    rule.getUntilDate(), rule.getNextDate());
+        }
+    }
+
+    public record BudgetRequest(
+            @NotNull(message = "{finance.movement.category.required}") UUID categoryId,
+            @NotNull(message = "{finance.movement.amount.invalid}")
+            @Min(value = 1, message = "{finance.movement.amount.invalid}")
+            @Max(value = 100_000_000_000L, message = "{finance.movement.amount.too-big}") Long amountCents) {
+    }
+
+    public record BudgetStatus(UUID id, CategoryResponse category, long amountCents, long spentCents, String currency,
+            BudgetService.Level level) {
+    }
+
+    /** Resultado de una importación CSV. Si hay errores no se importa nada. */
+    public record ImportResult(int imported, int skippedDuplicates, List<String> createdCategories,
+            List<String> createdAccounts, List<ImportError> errors) {
+    }
+
+    public record ImportError(int line, String message) {
     }
 
     public record Totals(long incomeCents, long expenseCents, long balanceCents) {

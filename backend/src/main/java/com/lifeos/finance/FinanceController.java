@@ -1,5 +1,8 @@
 package com.lifeos.finance;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -11,7 +14,11 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,10 +30,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.lifeos.auth.AppUserPrincipal;
 import com.lifeos.common.config.LifeosProperties;
 import com.lifeos.finance.FinanceDtos.AccountRequest;
+import com.lifeos.finance.FinanceDtos.BudgetRequest;
+import com.lifeos.finance.FinanceDtos.BudgetStatus;
+import com.lifeos.finance.FinanceDtos.ImportResult;
+import com.lifeos.finance.FinanceDtos.RecurringRequest;
+import com.lifeos.finance.FinanceDtos.RecurringResponse;
 import com.lifeos.finance.FinanceDtos.AccountResponse;
 import com.lifeos.finance.FinanceDtos.CategoryRequest;
 import com.lifeos.finance.FinanceDtos.CategoryResponse;
@@ -44,14 +57,21 @@ public class FinanceController {
     private final MovementService movementService;
     private final FinanceCatalogService catalogService;
     private final FinanceReportService reportService;
+    private final BudgetService budgetService;
+    private final RecurringService recurringService;
+    private final FinanceCsvService csvService;
     private final LifeosProperties properties;
     private final Clock clock;
 
     public FinanceController(MovementService movementService, FinanceCatalogService catalogService,
-            FinanceReportService reportService, LifeosProperties properties, Clock clock) {
+            FinanceReportService reportService, BudgetService budgetService, RecurringService recurringService,
+            FinanceCsvService csvService, LifeosProperties properties, Clock clock) {
         this.movementService = movementService;
         this.catalogService = catalogService;
         this.reportService = reportService;
+        this.budgetService = budgetService;
+        this.recurringService = recurringService;
+        this.csvService = csvService;
         this.properties = properties;
         this.clock = clock;
     }
@@ -159,6 +179,70 @@ public class FinanceController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAccount(@AuthenticationPrincipal AppUserPrincipal user, @PathVariable UUID id) {
         catalogService.deleteAccount(user.id(), id);
+    }
+
+    @GetMapping("/budgets")
+    public List<BudgetStatus> budgets(@AuthenticationPrincipal AppUserPrincipal user,
+            @RequestParam(required = false) YearMonth month) {
+        return budgetService.list(user.id(), month != null ? month : currentMonth());
+    }
+
+    /** Crea o cambia el presupuesto de una categoría. */
+    @PutMapping("/budgets")
+    public BudgetStatus setBudget(@AuthenticationPrincipal AppUserPrincipal user,
+            @Valid @RequestBody BudgetRequest request) {
+        return budgetService.set(user.id(), request.categoryId(), request.amountCents(), currentMonth());
+    }
+
+    @DeleteMapping("/budgets/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteBudget(@AuthenticationPrincipal AppUserPrincipal user, @PathVariable UUID id) {
+        budgetService.delete(user.id(), id);
+    }
+
+    @GetMapping("/recurring")
+    public List<RecurringResponse> recurring(@AuthenticationPrincipal AppUserPrincipal user) {
+        return recurringService.list(user.id());
+    }
+
+    @PostMapping("/recurring")
+    @ResponseStatus(HttpStatus.CREATED)
+    public RecurringResponse createRecurring(@AuthenticationPrincipal AppUserPrincipal user,
+            @Valid @RequestBody RecurringRequest request) {
+        return recurringService.create(user.id(), request);
+    }
+
+    @PostMapping("/recurring/{id}/stop")
+    public RecurringResponse stopRecurring(@AuthenticationPrincipal AppUserPrincipal user, @PathVariable UUID id) {
+        return recurringService.stop(user.id(), id);
+    }
+
+    @DeleteMapping("/recurring/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRecurring(@AuthenticationPrincipal AppUserPrincipal user, @PathVariable UUID id) {
+        recurringService.delete(user.id(), id);
+    }
+
+    /** Descarga los movimientos del intervalo (por defecto, todos) en CSV con BOM para que Excel lea las tildes. */
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export(@AuthenticationPrincipal AppUserPrincipal user,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        String csv = "\uFEFF" + csvService.export(user.id(), from != null ? from : LocalDate.of(1900, 1, 1),
+                to != null ? to : LocalDate.of(9999, 12, 31));
+        String filename = "lifeos-movimientos-" + LocalDate.now(clock.withZone(properties.timezone())) + ".csv";
+        return ResponseEntity.ok()
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(filename).build().toString())
+                .body(csv.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @PostMapping(path = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ImportResult importCsv(@AuthenticationPrincipal AppUserPrincipal user,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        try (InputStream input = file.getInputStream()) {
+            return csvService.importCsv(user.id(), input);
+        }
     }
 
     private YearMonth currentMonth() {

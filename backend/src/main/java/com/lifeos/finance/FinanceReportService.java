@@ -35,17 +35,20 @@ public class FinanceReportService {
     private final MovementRepository movements;
     private final FinanceCategoryRepository categories;
     private final FinanceSetupService setup;
+    private final RecurringService recurring;
 
     public FinanceReportService(MovementRepository movements, FinanceCategoryRepository categories,
-            FinanceSetupService setup) {
+            FinanceSetupService setup, RecurringService recurring) {
         this.movements = movements;
         this.categories = categories;
         this.setup = setup;
+        this.recurring = recurring;
     }
 
     @Transactional(readOnly = true)
     public MonthSummary month(UUID userId, YearMonth month) {
         String currency = setup.currency(userId);
+        recurring.generateDue(userId);
         List<CategorySum> sums = movements.sumByCategory(userId, month.atDay(1), month.atEndOfMonth());
         Map<UUID, FinanceCategory> byId = categories.findByUserIdOrderByKindAscNameAsc(userId).stream()
                 .collect(Collectors.toMap(FinanceCategory::getId, Function.identity()));
@@ -70,6 +73,7 @@ public class FinanceReportService {
     @Transactional(readOnly = true)
     public Trend trend(UUID userId, YearMonth to, int months) {
         String currency = setup.currency(userId);
+        recurring.generateDue(userId);
         YearMonth from = to.minusMonths(months - 1L);
         LocalDate start = from.atDay(1);
 

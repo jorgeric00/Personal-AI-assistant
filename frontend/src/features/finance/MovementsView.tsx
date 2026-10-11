@@ -5,6 +5,7 @@ import { formatMoney } from '../../lib/money'
 import { useDateFormat } from '../../lib/useRelativeDate'
 import { SearchIcon } from '../../ui/icons'
 import { useFinanceCategories, useMovements, type Movement, type MovementFilters, type MovementKind } from './api'
+import { CsvActions } from './CsvActions'
 import { MovementItem } from './MovementItem'
 
 interface MovementsViewProps {
@@ -152,6 +153,8 @@ export function MovementsView({ filters, onFiltersChange, onOpen }: MovementsVie
           {movements.isFetchingNextPage ? t('common.loading') : t('finance.loadMore')}
         </button>
       )}
+
+      <CsvActions filters={filters} />
     </div>
   )
 }

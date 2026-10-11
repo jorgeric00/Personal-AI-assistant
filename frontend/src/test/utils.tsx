@@ -35,6 +35,7 @@ const defaultHandlers: Record<string, Handler> = {
 const emptyTotals = { incomeCents: 0, expenseCents: 0, balanceCents: 0 }
 const defaultPrefixHandlers: [string, Handler][] = [
   ['GET /api/notes?view=ACTIVE&taskId=', () => json([])],
+  ['GET /api/finance/budgets?month=', () => json([])],
   [
     'GET /api/finance/summary?month=',
     () =>

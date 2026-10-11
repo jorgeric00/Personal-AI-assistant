@@ -43,6 +43,8 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | Movimientos recurrentes que generan movimientos reales | Una regla (semanal, mensual o anual, cada 1–12, con fecha de fin opcional) crea un movimiento normal en cada fecha: al crearla se generan las fechas ya pasadas (hasta 5 años), una tarea programada cada hora genera las nuevas y también se generan al consultar movimientos o resúmenes. El índice único `(recurring_id, occurrence_date)` y un bloqueo de la regla impiden duplicados. Los meses cortos usan el último día (el 31 pasa a 30 o 28). Detener o borrar una regla conserva los movimientos ya generados, que se pueden editar uno a uno. |
 | Exportación e importación CSV | El mismo formato en los dos sentidos (`date,type,amount,currency,category,account,description,tags`, UTF-8 con BOM para Excel). La importación acepta también `;`, cabeceras en español, «ingreso/gasto» y coma decimal; es todo o nada (si una línea falla no se guarda ninguna y se indica la línea), crea las categorías y cuentas que falten y no duplica movimientos idénticos ya existentes, así se puede reimportar una copia sin riesgo. Las celdas que empiezan por `=`, `+`, `-` o `@` se exportan escapadas para que una hoja de cálculo no las ejecute como fórmulas. |
 | Preparado para importar del banco más adelante | Las cuentas son una entidad propia y los movimientos no dependen de ningún proveedor; no se piden credenciales bancarias. Los extractos se pueden traer en CSV. |
+| Perfil físico sin datos supuestos | Todos los campos son opcionales y no hay valores por defecto. La edad se calcula a partir de la fecha de nacimiento y el peso actual es el del último registro con peso (o el inicial si aún no hay registros). |
+| Un registro de evolución por día | Peso, grasa corporal y perímetros se guardan como `NUMERIC` con los decimales justos (kg con 2, cm y % con 1) y todos son opcionales. Si se elige un día que ya tiene registro, la app abre ese registro en lugar de crear otro. Los gráficos colocan los puntos según la fecha real y solo muestran lo registrado, sin rellenar huecos. |
 | Migraciones con Flyway, `ddl-auto: validate` | El esquema solo cambia con migraciones versionadas. |
 | Pruebas de integración con Testcontainers | Se prueba contra PostgreSQL real, no contra una base de datos en memoria. |
 
@@ -75,6 +77,8 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | `finance_movement_tag` | Etiquetas de cada movimiento. |
 | `finance_budget` | Límite mensual en céntimos por categoría de gasto (uno por categoría). |
 | `finance_budget_alert` | Avisos de presupuesto ya enviados por mes y nivel (80 % o superado). |
+| `fitness_profile` | Perfil físico: fecha de nacimiento, altura, peso inicial, objetivo, nivel de actividad, experiencia, disponibilidad, equipamiento, preferencias y alimentos a evitar. Todo opcional. |
+| `body_measurement` | Registros de evolución: fecha (uno por día), peso, grasa corporal, cintura, pecho, cadera, brazo, muslo y comentarios. |
 | `finance_recurring` | Reglas de movimientos recurrentes: importe, categoría, cuenta, descripción, frecuencia, cada cuántos, inicio, fin y próxima fecha. Los movimientos generados guardan `recurring_id` y la fecha de su aparición. |
 
 ## Riesgos y temas abiertos

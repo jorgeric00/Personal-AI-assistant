@@ -372,6 +372,14 @@ input {
   border: 1px solid var(--border);
   background: var(--surface);
   font-size: 1rem; /* 16px evita el zoom automático de iOS */
+  width: 100%;
+  min-width: 0;
+}
+
+/* Las celdas de una rejilla no deben crecer por el ancho intrínseco de un campo. */
+.field-row > *,
+.metric-grid > * {
+  min-width: 0;
 }
 
 .field input[aria-invalid='true'] {
@@ -624,6 +632,7 @@ input {
 }
 
 .field textarea {
+  font: inherit;
   padding: 12px 14px;
   resize: vertical;
   min-height: 88px;
@@ -1964,4 +1973,72 @@ a.button {
   flex-shrink: 0;
   align-self: flex-start;
   margin-top: 0.45em;
+}
+
+.segmented-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.stat-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.chart-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.metric-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 12px;
+}
+
+@media (min-width: 640px) {
+  .metric-tiles {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.metric-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.metric-value {
+  font-size: 1.375rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-unit {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.metric-diff {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.entry-notes {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

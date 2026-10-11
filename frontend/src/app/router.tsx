@@ -4,6 +4,7 @@ import { LoginPage } from '../auth/LoginPage'
 import { RequireAuth } from '../auth/RequireAuth'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { FinancePage } from '../features/finance/FinancePage'
+import { FitnessPage } from '../features/fitness/FitnessPage'
 import { NotesPage } from '../features/notes/NotesPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { TasksPage } from '../features/tasks/TasksPage'
@@ -21,6 +22,7 @@ export const routes: RouteObject[] = [
           { path: 'tareas', element: <TasksPage /> },
           { path: 'finanzas', element: <FinancePage /> },
           { path: 'notas', element: <NotesPage /> },
+          { path: 'entreno', element: <FitnessPage /> },
           { path: 'ajustes', element: <SettingsPage /> },
         ],
       },

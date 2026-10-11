@@ -73,6 +73,10 @@ export function DashboardPage() {
             <PlusIcon />
             {t('finance.kind.EXPENSE')}
           </Link>
+          <Link to="/entreno?nuevo=1" className="quick-action">
+            <PlusIcon />
+            {t('fitness.quickAdd')}
+          </Link>
         </div>
       </section>
 

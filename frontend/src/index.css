@@ -472,3 +472,7 @@ input {
 .login-card form {
   margin-top: 16px;
 }
+
+.segmented-2 {
+  grid-template-columns: repeat(2, 1fr);
+}

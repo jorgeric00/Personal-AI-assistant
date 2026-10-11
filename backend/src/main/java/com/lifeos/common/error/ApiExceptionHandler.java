@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -23,12 +25,19 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import com.lifeos.auth.TooManyLoginAttemptsException;
 
 /**
- * Traduce las excepciones a respuestas RFC 9457 (application/problem+json) con mensajes en español.
+ * Traduce las excepciones a respuestas RFC 9457 (application/problem+json) en el idioma de la petición.
+ * Los textos están en messages*.properties con las claves error.&lt;código&gt;.title y .detail.
  */
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
+    private final MessageSource messages;
+
+    public ApiExceptionHandler(MessageSource messages) {
+        this.messages = messages;
+    }
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
@@ -37,8 +46,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errors.putIfAbsent(error.getField(), error.getDefaultMessage());
         }
-        ProblemDetail problem = problem(HttpStatus.BAD_REQUEST, "Datos no válidos",
-                "Revisa los campos marcados.", "validation");
+        ProblemDetail problem = problem(HttpStatus.BAD_REQUEST, "validation");
         problem.setProperty("errors", errors);
         return ResponseEntity.badRequest().body(problem);
     }
@@ -46,15 +54,12 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
             HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        return ResponseEntity.badRequest().body(problem(HttpStatus.BAD_REQUEST, "Petición no válida",
-                "El cuerpo de la petición no tiene el formato esperado.", "malformed-request"));
+        return ResponseEntity.badRequest().body(problem(HttpStatus.BAD_REQUEST, "malformed"));
     }
 
     @ExceptionHandler(AuthenticationException.class)
     ResponseEntity<ProblemDetail> handleAuthentication(AuthenticationException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem(HttpStatus.UNAUTHORIZED,
-                "No se ha podido iniciar sesión", "Correo electrónico o contraseña incorrectos.",
-                "invalid-credentials"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem(HttpStatus.UNAUTHORIZED, "credentials"));
     }
 
     @ExceptionHandler(TooManyLoginAttemptsException.class)
@@ -62,21 +67,20 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         long minutes = Math.max(1, (ex.retryAfter().toSeconds() + 59) / 60);
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.retryAfter().toSeconds()))
-                .body(problem(HttpStatus.TOO_MANY_REQUESTS, "Demasiados intentos",
-                        "Has superado el número de intentos. Vuelve a probar en " + minutes + " min.",
-                        "too-many-attempts"));
+                .body(problem(HttpStatus.TOO_MANY_REQUESTS, "too-many-attempts", minutes));
     }
 
     @ExceptionHandler(Exception.class)
     ResponseEntity<ProblemDetail> handleUnexpected(Exception ex) {
         log.error("Error no controlado", ex);
-        return ResponseEntity.internalServerError().body(problem(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Error inesperado", "Ha ocurrido un error inesperado. Inténtalo de nuevo.", "internal"));
+        return ResponseEntity.internalServerError().body(problem(HttpStatus.INTERNAL_SERVER_ERROR, "internal"));
     }
 
-    private static ProblemDetail problem(HttpStatus status, String title, String detail, String code) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
-        problem.setTitle(title);
+    private ProblemDetail problem(HttpStatus status, String code, Object... args) {
+        var locale = LocaleContextHolder.getLocale();
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status,
+                messages.getMessage("error." + code + ".detail", args, locale));
+        problem.setTitle(messages.getMessage("error." + code + ".title", null, locale));
         problem.setType(URI.create("urn:lifeos:problem:" + code));
         return problem;
     }

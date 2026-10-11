@@ -41,5 +41,6 @@ export const testUser = {
   id: '00000000-0000-0000-0000-000000000001',
   email: 'jorge@example.com',
   displayName: 'Jorge',
+  locale: 'es',
   timezone: 'Europe/Madrid',
 }

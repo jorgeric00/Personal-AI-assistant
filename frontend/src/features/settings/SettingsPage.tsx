@@ -1,51 +1,84 @@
+import type { ParseKeys } from 'i18next'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
-import { useCurrentUser, useLogout } from '../../auth/auth'
+import { useCurrentUser, useLogout, useUpdateLanguage } from '../../auth/auth'
+import { LANGUAGE_NAMES, SUPPORTED_LANGUAGES, isLanguage } from '../../i18n'
 import { useThemePreference, type ThemePreference } from '../../theme/theme'
 import { useInstallPrompt } from './useInstallPrompt'
 
-const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
-  { value: 'system', label: 'Sistema' },
-  { value: 'light', label: 'Claro' },
-  { value: 'dark', label: 'Oscuro' },
+const THEME_OPTIONS: { value: ThemePreference; label: ParseKeys }[] = [
+  { value: 'system', label: 'settings.themeSystem' },
+  { value: 'light', label: 'settings.themeLight' },
+  { value: 'dark', label: 'settings.themeDark' },
 ]
 
 export function SettingsPage() {
+  const { t, i18n } = useTranslation()
   const { data: user } = useCurrentUser()
   const logout = useLogout()
+  const updateLanguage = useUpdateLanguage()
   const navigate = useNavigate()
   const [theme, setTheme] = useThemePreference()
   const install = useInstallPrompt()
+  const language = isLanguage(i18n.language) ? i18n.language : undefined
 
   return (
     <div className="page stack-lg">
       <header className="page-header">
-        <h1 className="h1">Ajustes</h1>
+        <h1 className="h1">{t('settings.title')}</h1>
       </header>
 
       <section className="card stack" aria-labelledby="account-title">
         <h2 id="account-title" className="h2">
-          Cuenta
+          {t('settings.account')}
         </h2>
         <dl className="details">
           <div>
-            <dt>Nombre</dt>
+            <dt>{t('settings.name')}</dt>
             <dd>{user?.displayName}</dd>
           </div>
           <div>
-            <dt>Correo electrónico</dt>
+            <dt>{t('settings.email')}</dt>
             <dd>{user?.email}</dd>
           </div>
           <div>
-            <dt>Zona horaria</dt>
+            <dt>{t('settings.timezone')}</dt>
             <dd>{user?.timezone}</dd>
           </div>
         </dl>
       </section>
 
+      <section className="card stack" aria-labelledby="language-title">
+        <h2 id="language-title" className="h2">
+          {t('settings.language')}
+        </h2>
+        <div className="segmented segmented-2" role="radiogroup" aria-labelledby="language-title">
+          {SUPPORTED_LANGUAGES.map((option) => (
+            <button
+              key={option}
+              type="button"
+              role="radio"
+              lang={option}
+              aria-checked={language === option}
+              className="segmented-option"
+              disabled={updateLanguage.isPending}
+              onClick={() => updateLanguage.mutate(option)}
+            >
+              {LANGUAGE_NAMES[option]}
+            </button>
+          ))}
+        </div>
+        {updateLanguage.isError && (
+          <p className="field-error" role="alert">
+            {t('settings.languageError')}
+          </p>
+        )}
+      </section>
+
       <section className="card stack" aria-labelledby="theme-title">
         <h2 id="theme-title" className="h2">
-          Apariencia
+          {t('settings.appearance')}
         </h2>
         <div className="segmented" role="radiogroup" aria-labelledby="theme-title">
           {THEME_OPTIONS.map((option) => (
@@ -57,7 +90,7 @@ export function SettingsPage() {
               className="segmented-option"
               onClick={() => setTheme(option.value)}
             >
-              {option.label}
+              {t(option.label)}
             </button>
           ))}
         </div>
@@ -65,28 +98,19 @@ export function SettingsPage() {
 
       <section className="card stack" aria-labelledby="install-title">
         <h2 id="install-title" className="h2">
-          Instalar en el móvil
+          {t('settings.install')}
         </h2>
-        {install.kind === 'installed' && <p className="muted">LifeOS ya está instalada en este dispositivo.</p>}
+        {install.kind === 'installed' && <p className="muted">{t('settings.installed')}</p>}
         {install.kind === 'prompt' && (
           <>
-            <p className="muted">Añade LifeOS a tu pantalla de inicio para abrirla como una app.</p>
+            <p className="muted">{t('settings.installPrompt')}</p>
             <button type="button" className="button button-primary" onClick={() => install.install()}>
-              Instalar LifeOS
+              {t('settings.installButton')}
             </button>
           </>
         )}
-        {install.kind === 'ios' && (
-          <p className="muted">
-            En Safari, pulsa el botón Compartir y elige «Añadir a pantalla de inicio». Así podrás recibir
-            notificaciones cuando estén disponibles.
-          </p>
-        )}
-        {install.kind === 'manual' && (
-          <p className="muted">
-            Abre el menú del navegador y elige «Instalar aplicación» o «Añadir a pantalla de inicio».
-          </p>
-        )}
+        {install.kind === 'ios' && <p className="muted">{t('settings.installIos')}</p>}
+        {install.kind === 'manual' && <p className="muted">{t('settings.installManual')}</p>}
       </section>
 
       <button
@@ -95,7 +119,7 @@ export function SettingsPage() {
         disabled={logout.isPending}
         onClick={() => logout.mutate(undefined, { onSettled: () => navigate('/login', { replace: true }) })}
       >
-        {logout.isPending ? 'Cerrando sesión…' : 'Cerrar sesión'}
+        {logout.isPending ? t('settings.loggingOut') : t('settings.logout')}
       </button>
     </div>
   )

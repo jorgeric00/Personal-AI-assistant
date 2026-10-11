@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router'
 import { registerSW } from 'virtual:pwa-register'
 
 import { createQueryClient } from './app/queryClient'
+import './i18n'
 import { routes } from './app/router'
 import './index.css'
 

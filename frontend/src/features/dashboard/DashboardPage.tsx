@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { useCurrentUser } from '../../auth/auth'
-import { DEFAULT_TIMEZONE, formatLongDate, greeting } from '../../lib/date'
+import { intlLocale, isLanguage } from '../../i18n'
+import { DEFAULT_TIMEZONE, formatLongDate, greetingKey } from '../../lib/date'
 
 function useNow(intervalMs = 60_000) {
   const [now, setNow] = useState(() => new Date())
@@ -13,28 +15,25 @@ function useNow(intervalMs = 60_000) {
 }
 
 export function DashboardPage() {
+  const { t, i18n } = useTranslation()
   const { data: user } = useCurrentUser()
   const now = useNow()
   const timeZone = user?.timezone ?? DEFAULT_TIMEZONE
+  const locale = intlLocale(isLanguage(i18n.language) ? i18n.language : undefined)
+  const greeting = t(greetingKey(now, timeZone))
 
   return (
     <div className="page stack-lg">
       <header className="page-header">
-        <p className="eyebrow">{formatLongDate(now, timeZone)}</p>
-        <h1 className="h1">
-          {greeting(now, timeZone)}
-          {user ? `, ${user.displayName}` : ''}
-        </h1>
+        <p className="eyebrow">{formatLongDate(now, locale, timeZone)}</p>
+        <h1 className="h1">{user ? t('greeting.withName', { greeting, name: user.displayName }) : greeting}</h1>
       </header>
 
       <section className="card empty-state" aria-labelledby="empty-title">
         <h2 id="empty-title" className="h2">
-          Tu día aparecerá aquí
+          {t('dashboard.emptyTitle')}
         </h2>
-        <p className="muted">
-          Este es el resumen de hoy. Cuando estén disponibles las tareas, los recordatorios, las notas y las
-          finanzas, verás aquí lo que tienes pendiente y podrás añadir cosas con un toque.
-        </p>
+        <p className="muted">{t('dashboard.emptyBody')}</p>
       </section>
     </div>
   )

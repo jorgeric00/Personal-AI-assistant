@@ -22,9 +22,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.lifeos.auth.AuthDtos.CsrfResponse;
-import com.lifeos.auth.AuthDtos.CurrentUserResponse;
 import com.lifeos.auth.AuthDtos.LoginRequest;
-import com.lifeos.common.config.LifeosProperties;
+import com.lifeos.user.UserDtos.CurrentUserResponse;
+import com.lifeos.user.UserService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -33,16 +33,16 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
     private final LoginAttemptService loginAttempts;
-    private final LifeosProperties properties;
+    private final UserService userService;
     private final SecurityContextHolderStrategy contextHolder = SecurityContextHolder.getContextHolderStrategy();
 
     public AuthController(AuthenticationManager authenticationManager,
             SecurityContextRepository securityContextRepository, LoginAttemptService loginAttempts,
-            LifeosProperties properties) {
+            UserService userService) {
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
         this.loginAttempts = loginAttempts;
-        this.properties = properties;
+        this.userService = userService;
     }
 
     /** Devuelve el token CSRF y deja la cookie XSRF-TOKEN preparada para el cliente. */
@@ -76,16 +76,11 @@ public class AuthController {
         contextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
 
-        return toResponse((AppUserPrincipal) authentication.getPrincipal());
+        return userService.currentUser(((AppUserPrincipal) authentication.getPrincipal()).id());
     }
 
     @GetMapping("/me")
     public CurrentUserResponse me(@AuthenticationPrincipal AppUserPrincipal principal) {
-        return toResponse(principal);
-    }
-
-    private CurrentUserResponse toResponse(AppUserPrincipal principal) {
-        return new CurrentUserResponse(principal.id(), principal.email(), principal.displayName(),
-                properties.timezone().getId());
+        return userService.currentUser(principal.id());
     }
 }

@@ -20,6 +20,10 @@ spring:
     jdbc:
       initialize-schema: never
       cleanup-cron: "0 */30 * * * *"
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
   mvc:
     problemdetails:
       enabled: true

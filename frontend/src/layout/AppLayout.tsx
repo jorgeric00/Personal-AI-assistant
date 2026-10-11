@@ -1,28 +1,32 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet } from 'react-router'
+
+import type { ParseKeys } from 'i18next'
 
 import { SettingsIcon, TodayIcon } from './icons'
 
 interface NavItem {
   to: string
-  label: string
+  label: ParseKeys
   icon: ReactNode
   end?: boolean
 }
 
 // Cada módulo nuevo añade aquí su entrada cuando esté disponible.
 const NAV_ITEMS: NavItem[] = [
-  { to: '/', label: 'Hoy', icon: <TodayIcon />, end: true },
-  { to: '/ajustes', label: 'Ajustes', icon: <SettingsIcon /> },
+  { to: '/', label: 'nav.today', icon: <TodayIcon />, end: true },
+  { to: '/ajustes', label: 'nav.settings', icon: <SettingsIcon /> },
 ]
 
 export function AppLayout() {
+  const { t } = useTranslation()
   return (
     <div className="app-shell">
       <a href="#contenido" className="skip-link">
-        Saltar al contenido
+        {t('common.skipToContent')}
       </a>
-      <nav className="app-nav" aria-label="Navegación principal">
+      <nav className="app-nav" aria-label={t('nav.main')}>
         <div className="app-nav-brand">
           <img src="/icons/icon-192.png" alt="" width={32} height={32} />
           <span>LifeOS</span>
@@ -32,7 +36,7 @@ export function AppLayout() {
             <li key={item.to}>
               <NavLink to={item.to} end={item.end} className="app-nav-link">
                 {item.icon}
-                <span>{item.label}</span>
+                <span>{t(item.label)}</span>
               </NavLink>
             </li>
           ))}

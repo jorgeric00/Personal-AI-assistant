@@ -26,6 +26,7 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | Bloqueo tras 5 intentos fallidos durante 15 min | Protección básica frente a fuerza bruta si la app se expone a internet. |
 | Fechas en UTC en la base de datos (`timestamptz`) y zona `Europe/Madrid` para mostrar | Evita errores con los cambios de hora. La zona del usuario viene de la configuración y se usa en el frontend. |
 | Errores con `application/problem+json` (RFC 9457) | Formato estándar; los mensajes están en español y los errores de validación se devuelven por campo. |
+| Internacionalización: español por defecto e inglés | En la app, i18next con los textos en `frontend/src/i18n/locales/` (el español es la referencia y TypeScript obliga a que el inglés tenga las mismas claves). En el servidor, `messages*.properties` según la cabecera `Accept-Language`, que la app envía siempre; una prueba comprueba que ambos ficheros tienen las mismas claves. El idioma elegido se guarda en la cuenta (`app_user.locale`) para usarlo también en lo que genera el servidor, como las notificaciones. Las fechas se formatean con `Intl` según el idioma. |
 | Migraciones con Flyway, `ddl-auto: validate` | El esquema solo cambia con migraciones versionadas. |
 | Pruebas de integración con Testcontainers | Se prueba contra PostgreSQL real, no contra una base de datos en memoria. |
 
@@ -34,13 +35,13 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 - La app tiene un solo usuario (tú). El modelo de datos incluye `user_id` en las entidades para no cerrar la
   puerta a varios usuarios, pero no hay registro ni roles.
 - Unidades métricas y euros por defecto.
-- La interfaz solo está en español.
+- Para añadir un idioma: crear `frontend/src/i18n/locales/<código>.ts` y `backend/src/main/resources/messages_<código>.properties`, y añadirlo a `SUPPORTED_LANGUAGES` y a `SupportedLocales`.
 
 ## Modelo de datos actual
 
 | Tabla | Contenido |
 | --- | --- |
-| `app_user` | Cuenta: correo (único, sin distinguir mayúsculas), nombre visible, hash de la contraseña, fechas. |
+| `app_user` | Cuenta: correo (único, sin distinguir mayúsculas), nombre visible, hash de la contraseña, idioma, fechas. |
 | `spring_session`, `spring_session_attributes` | Sesiones activas. |
 
 ## Riesgos y temas abiertos

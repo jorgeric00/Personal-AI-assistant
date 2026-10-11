@@ -98,6 +98,33 @@ class AuthIntegrationTest {
     }
 
     @Test
+    void errorsFollowAcceptLanguage() throws Exception {
+        HttpResponse<String> english = postWithCsrf("/api/auth/login", loginJson("no-es-un-correo", ""), "en");
+        assertThat(english.statusCode()).isEqualTo(400);
+        assertThat(english.body()).contains("Invalid data").contains("The email address is not valid")
+                .contains("Enter your password");
+
+        HttpResponse<String> unsupported = postWithCsrf("/api/auth/login", loginJson(EMAIL, "incorrecta"), "fr");
+        assertThat(unsupported.body()).contains("Correo electrónico o contraseña incorrectos");
+    }
+
+    @Test
+    void savesLanguagePreference() throws Exception {
+        assertThat(postWithCsrf("/api/auth/login", loginJson(EMAIL, PASSWORD)).statusCode()).isEqualTo(200);
+        assertThat(get("/api/auth/me").body()).contains("\"locale\":\"es\"");
+
+        HttpResponse<String> invalid = patchWithCsrf("/api/me/preferences", "{\"locale\":\"fr\"}");
+        assertThat(invalid.statusCode()).isEqualTo(400);
+        assertThat(invalid.body()).contains("Idioma no disponible");
+
+        HttpResponse<String> updated = patchWithCsrf("/api/me/preferences", "{\"locale\":\"en\"}");
+        assertThat(updated.statusCode()).isEqualTo(200);
+        assertThat(get("/api/auth/me").body()).contains("\"locale\":\"en\"");
+
+        patchWithCsrf("/api/me/preferences", "{\"locale\":\"es\"}");
+    }
+
+    @Test
     void loginKeepsSessionUntilLogout() throws Exception {
         HttpResponse<String> login = postWithCsrf("/api/auth/login", loginJson("  Propietario@Example.com ", PASSWORD));
         assertThat(login.statusCode()).isEqualTo(200);
@@ -126,13 +153,27 @@ class AuthIntegrationTest {
     }
 
     private HttpResponse<String> postWithCsrf(String path, String json) throws Exception {
+        return postWithCsrf(path, json, "es");
+    }
+
+    private HttpResponse<String> postWithCsrf(String path, String json, String language) throws Exception {
+        return sendWithCsrf(path, "POST", json, language);
+    }
+
+    private HttpResponse<String> patchWithCsrf(String path, String json) throws Exception {
+        return sendWithCsrf(path, "PATCH", json, "es");
+    }
+
+    private HttpResponse<String> sendWithCsrf(String path, String method, String json, String language)
+            throws Exception {
         assertThat(get("/api/auth/csrf").statusCode()).isEqualTo(200);
         HttpCookie xsrf = cookie("XSRF-TOKEN");
         assertThat(xsrf).as("cookie XSRF-TOKEN").isNotNull();
         return send(HttpRequest.newBuilder(uri(path))
                 .header("Content-Type", "application/json")
+                .header("Accept-Language", language)
                 .header("X-XSRF-TOKEN", xsrf.getValue())
-                .POST(HttpRequest.BodyPublishers.ofString(json)));
+                .method(method, HttpRequest.BodyPublishers.ofString(json)));
     }
 
     private HttpResponse<String> get(String path) throws Exception {

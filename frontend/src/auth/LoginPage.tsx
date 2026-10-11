@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 
 import { ApiError } from '../api/client'
@@ -9,6 +10,7 @@ export function LoginPage() {
   const login = useLogin()
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -32,7 +34,7 @@ export function LoginPage() {
       <div className="login-card card">
         <img src="/icons/icon-192.png" alt="" className="login-logo" width={56} height={56} />
         <h1 className="h1">LifeOS</h1>
-        <p className="muted">Inicia sesión para ver tu día.</p>
+        <p className="muted">{t('login.subtitle')}</p>
 
         <form className="stack" onSubmit={onSubmit} noValidate>
           {error && Object.keys(fieldErrors).length === 0 && (
@@ -42,7 +44,7 @@ export function LoginPage() {
           )}
 
           <div className="field">
-            <label htmlFor="email">Correo electrónico</label>
+            <label htmlFor="email">{t('login.email')}</label>
             <input
               id="email"
               type="email"
@@ -63,7 +65,7 @@ export function LoginPage() {
           </div>
 
           <div className="field">
-            <label htmlFor="password">Contraseña</label>
+            <label htmlFor="password">{t('login.password')}</label>
             <input
               id="password"
               type="password"
@@ -82,7 +84,7 @@ export function LoginPage() {
           </div>
 
           <button type="submit" className="button button-primary button-block" disabled={login.isPending}>
-            {login.isPending ? 'Entrando…' : 'Entrar'}
+            {login.isPending ? t('login.submitting') : t('login.submit')}
           </button>
         </form>
       </div>

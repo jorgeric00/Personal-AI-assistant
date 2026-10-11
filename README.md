@@ -2,7 +2,7 @@
 
 Aplicación personal para organizar la vida fuera del trabajo: tareas, notas, finanzas, agenda, entrenamiento,
 alimentación y evolución física. Pensada sobre todo para el móvil (se instala como app desde el navegador) y
-usable también en el ordenador.
+usable también en el ordenador. Disponible en español (por defecto) e inglés.
 
 La especificación completa del producto está en [docs/especificacion.md](docs/especificacion.md) y las decisiones
 técnicas en [docs/arquitectura.md](docs/arquitectura.md).

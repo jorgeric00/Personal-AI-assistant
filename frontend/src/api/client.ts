@@ -1,5 +1,7 @@
 /** Cliente HTTP de la API: sesión por cookie y protección CSRF con cabecera X-XSRF-TOKEN. */
 
+import i18n, { currentLanguage } from '../i18n'
+
 export type FieldErrors = Record<string, string>
 
 export class ApiError extends Error {
@@ -39,20 +41,20 @@ async function toApiError(response: Response): Promise<ApiError> {
     const body = (await response.json()) as { title?: string; detail?: string; errors?: FieldErrors }
     return new ApiError(
       response.status,
-      body.title ?? 'Error',
+      body.title ?? i18n.t('errors.title'),
       body.detail ?? defaultMessage(response.status),
       body.errors ?? {},
     )
   } catch {
-    return new ApiError(response.status, 'Error', defaultMessage(response.status))
+    return new ApiError(response.status, i18n.t('errors.title'), defaultMessage(response.status))
   }
 }
 
 function defaultMessage(status: number): string {
-  if (status === 401) return 'Tu sesión ha caducado. Vuelve a iniciar sesión.'
-  if (status === 403) return 'No tienes permiso para realizar esta acción. Recarga la página e inténtalo de nuevo.'
-  if (status >= 500) return 'El servidor no está disponible ahora mismo. Inténtalo de nuevo en unos minutos.'
-  return 'No se ha podido completar la operación.'
+  if (status === 401) return i18n.t('errors.unauthorized')
+  if (status === 403) return i18n.t('errors.forbidden')
+  if (status >= 500) return i18n.t('errors.server')
+  return i18n.t('errors.generic')
 }
 
 export interface RequestOptions {
@@ -61,7 +63,8 @@ export interface RequestOptions {
 }
 
 export async function apiFetch<T>(path: string, { method = 'GET', body }: RequestOptions = {}): Promise<T> {
-  const headers: Record<string, string> = { Accept: 'application/json' }
+  // El servidor responde los errores en el idioma de la interfaz.
+  const headers: Record<string, string> = { Accept: 'application/json', 'Accept-Language': currentLanguage() }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
 
   const send = async () => {
@@ -84,7 +87,7 @@ export async function apiFetch<T>(path: string, { method = 'GET', body }: Reques
     }
   } catch (error) {
     if (error instanceof ApiError) throw error
-    throw new ApiError(0, 'Sin conexión', 'No hay conexión con el servidor. Comprueba tu conexión a internet.')
+    throw new ApiError(0, i18n.t('errors.offlineTitle'), i18n.t('errors.offline'))
   }
 
   if (!response.ok) throw await toApiError(response)

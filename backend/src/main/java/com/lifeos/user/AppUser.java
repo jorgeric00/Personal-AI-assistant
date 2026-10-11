@@ -24,6 +24,9 @@ public class AppUser {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(nullable = false)
+    private String locale;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -38,6 +41,7 @@ public class AppUser {
         this.email = email;
         this.displayName = displayName;
         this.passwordHash = passwordHash;
+        this.locale = SupportedLocales.DEFAULT.toLanguageTag();
         this.createdAt = now;
         this.updatedAt = now;
     }
@@ -56,6 +60,15 @@ public class AppUser {
 
     public String getPasswordHash() {
         return passwordHash;
+    }
+
+    public String getLocale() {
+        return locale;
+    }
+
+    public void changeLocale(String locale, Instant now) {
+        this.locale = locale;
+        this.updatedAt = now;
     }
 
     public Instant getCreatedAt() {

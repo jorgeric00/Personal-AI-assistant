@@ -74,7 +74,8 @@ public final class TaskDtos {
             Instant createdAt, Instant updatedAt) {
     }
 
-    public record OccurrenceRequest(@NotNull(message = "{task.occurrence.required}") LocalDate occurrenceDate) {
+    /** Aparición a completar o reabrir; null en las tareas sin fecha. */
+    public record OccurrenceRequest(LocalDate occurrenceDate) {
     }
 
     public record PostponeRequest(@NotNull(message = "{task.postpone.date.required}") LocalDate date) {

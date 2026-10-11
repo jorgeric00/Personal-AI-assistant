@@ -35,6 +35,9 @@ services:
       LIFEOS_ADMIN_PASSWORD: ${LIFEOS_ADMIN_PASSWORD:-}
       LIFEOS_ADMIN_NAME: ${LIFEOS_ADMIN_NAME:-}
       LIFEOS_COOKIE_SECURE: ${LIFEOS_COOKIE_SECURE:-false}
+      LIFEOS_PUSH_SUBJECT: ${LIFEOS_PUSH_SUBJECT:-mailto:lifeos@localhost}
+      LIFEOS_VAPID_PUBLIC_KEY: ${LIFEOS_VAPID_PUBLIC_KEY:-}
+      LIFEOS_VAPID_PRIVATE_KEY: ${LIFEOS_VAPID_PRIVATE_KEY:-}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health/readiness || exit 1"]
       interval: 10s

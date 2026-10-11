@@ -88,6 +88,14 @@ class TaskIntegrationTest {
     }
 
     @Test
+    void completesTaskWithoutDate() {
+        String id = create(task("Leer un libro", null, null));
+        HttpResponse<String> done = api.post("/api/tasks/" + id + "/complete", "{\"occurrenceDate\":null}");
+        assertThat(done.statusCode()).as(done.body()).isEqualTo(200);
+        assertThat(JsonPath.<String>read(done.body(), "$.status")).isEqualTo("DONE");
+    }
+
+    @Test
     void completesAndUndoesSimpleTask() {
         String id = create(task("Comprar pan", "2026-10-11", null));
 

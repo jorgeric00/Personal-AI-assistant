@@ -31,6 +31,10 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | Tareas y recordatorios en la misma tabla (`kind`) | Comparten fecha, hora, repetición, categoría y aviso; los recordatorios no tienen fecha límite. |
 | Notificaciones Web Push propias, sin servicios de terceros | El servidor cifra los mensajes (RFC 8291, `aes128gcm`) y los firma con VAPID (RFC 8292) usando solo la criptografía del JDK, sin dependencias extra. Las claves VAPID se pueden pasar por variables de entorno; si no, se generan al arrancar y se guardan en `server_key`. El contenido viaja cifrado de extremo a extremo hasta el dispositivo. |
 | Envío de avisos con una tarea programada cada minuto | `ReminderNotifier` busca las ocurrencias cuyo aviso ya toca. Antes de enviar, inserta en `task_notification` (clave tarea + fecha), así cada ocurrencia se avisa una sola vez aunque haya varios procesos; si ningún dispositivo lo recibe, libera la marca para reintentar. Los avisos con más de 2 horas de retraso (por ejemplo, tras tener el servidor apagado) se descartan para no enviar ráfagas antiguas. Las suscripciones que el servicio push da por caducadas (404/410) se borran. |
+| Notas con guardado automático | El editor guarda mientras se escribe (con una pausa de 0,7 s), al cerrar y al pasar la app a segundo plano. Los guardados van de uno en uno para no crear la misma nota dos veces, y una nota nueva no se crea hasta que tiene título o contenido. |
+| Búsqueda de notas sin extensiones de PostgreSQL | Cada nota guarda una columna `search_text` con título, contenido y etiquetas en minúsculas y sin tildes; la búsqueda exige que aparezcan todas las palabras. Es suficiente para el volumen de una persona y no depende de `unaccent` ni de permisos de superusuario. |
+| Papelera con borrado a los 30 días | Las notas de la papelera solo se pueden restaurar o borrar. Una tarea programada borra cada 6 horas las que llevan más de 30 días. |
+| Relaciones de notas en tablas propias (`note_task`) | Por ahora una nota se puede relacionar con tareas. Cuando existan objetivos, actividades o planificaciones se añadirá una tabla equivalente para cada uno, con claves foráneas reales. |
 | Migraciones con Flyway, `ddl-auto: validate` | El esquema solo cambia con migraciones versionadas. |
 | Pruebas de integración con Testcontainers | Se prueba contra PostgreSQL real, no contra una base de datos en memoria. |
 
@@ -53,6 +57,9 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | `push_subscription` | Dispositivos con notificaciones activadas: endpoint del servicio push y claves públicas del navegador. |
 | `task_notification` | Avisos ya enviados por tarea y ocurrencia, para no repetirlos. |
 | `server_key` | Claves generadas por el servidor (VAPID). |
+| `note` | Notas: título, contenido, estado (activa, archivada, en la papelera), fijada, favorita, texto de búsqueda y fechas. |
+| `note_tag` | Etiquetas de cada nota, en minúsculas. |
+| `note_task` | Tareas relacionadas con cada nota. |
 
 ## Riesgos y temas abiertos
 

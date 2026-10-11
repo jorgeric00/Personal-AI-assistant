@@ -84,4 +84,8 @@ public final class TaskDtos {
     public record CalendarEntry(UUID taskId, LocalDate date, LocalTime time, String title, Kind kind,
             Priority priority, CategoryResponse category, boolean done, boolean recurring) {
     }
+
+    /** Referencia corta a una tarea desde otros módulos (por ejemplo, las notas). */
+    public record TaskRef(UUID id, String title, Kind kind, Status status, LocalDate dueDate) {
+    }
 }

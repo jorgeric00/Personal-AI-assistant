@@ -1,6 +1,7 @@
 package com.lifeos.tasks;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,6 +13,8 @@ import org.springframework.data.jpa.repository.Query;
 interface TaskRepository extends JpaRepository<Task, UUID> {
 
     Optional<Task> findByIdAndUserId(UUID id, UUID userId);
+
+    List<Task> findByUserIdAndIdIn(UUID userId, Collection<UUID> ids);
 
     @Query("""
             select t from Task t left join fetch t.category

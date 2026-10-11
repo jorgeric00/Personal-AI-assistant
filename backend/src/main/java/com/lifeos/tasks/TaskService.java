@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import com.lifeos.tasks.Task.Status;
 import com.lifeos.tasks.TaskDtos.CalendarEntry;
 import com.lifeos.tasks.TaskDtos.CategoryResponse;
 import com.lifeos.tasks.TaskDtos.RecurrenceDto;
+import com.lifeos.tasks.TaskDtos.TaskRef;
 import com.lifeos.tasks.TaskDtos.TaskRequest;
 import com.lifeos.tasks.TaskDtos.TaskResponse;
 
@@ -81,6 +83,17 @@ public class TaskService {
     @Transactional(readOnly = true)
     public TaskResponse get(UUID userId, UUID taskId) {
         return toResponse(load(userId, taskId), today());
+    }
+
+    /** Resumen de las tareas indicadas que pertenecen al usuario, para mostrarlas relacionadas en otros módulos. */
+    @Transactional(readOnly = true)
+    public Map<UUID, TaskRef> refs(UUID userId, Collection<UUID> taskIds) {
+        if (taskIds.isEmpty()) {
+            return Map.of();
+        }
+        return tasks.findByUserIdAndIdIn(userId, taskIds).stream()
+                .collect(Collectors.toMap(Task::getId, t -> new TaskRef(t.getId(), t.getTitle(), t.getKind(),
+                        t.getStatus(), t.getDueDate())));
     }
 
     @Transactional

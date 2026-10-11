@@ -26,13 +26,20 @@ const defaultHandlers: Record<string, Handler> = {
   'GET /api/tasks?view=TODAY': () => json([]),
   'GET /api/tasks?view=UPCOMING&kind=REMINDER': () => json([]),
   'GET /api/task-categories': () => json([]),
+  'GET /api/tasks?view=ALL': () => json([]),
+  'GET /api/notes?view=ACTIVE&pinned=true': () => json([]),
+  'GET /api/note-tags': () => json([]),
 }
+
+/** Lecturas por defecto que dependen de un identificador. */
+const defaultPrefixHandlers: [string, Handler][] = [['GET /api/notes?view=ACTIVE&taskId=', () => json([])]]
 
 /** Sustituye fetch por un servidor falso: clave "MÉTODO /ruta". */
 export function mockFetch(handlers: Record<string, Handler>) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const key = `${init?.method ?? 'GET'} ${String(input)}`
-    const handler = handlers[key] ?? defaultHandlers[key]
+    const handler =
+      handlers[key] ?? defaultHandlers[key] ?? defaultPrefixHandlers.find(([prefix]) => key.startsWith(prefix))?.[1]
     if (!handler) throw new Error(`Petición inesperada: ${key}`)
     return handler(init)
   })

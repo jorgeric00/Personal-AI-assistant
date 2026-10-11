@@ -85,3 +85,20 @@ export function weekdayNames(locale: string, style: 'narrow' | 'short' = 'short'
     new Intl.DateTimeFormat(locale, { weekday: style, timeZone: 'UTC' }).format(new Date(Date.UTC(2024, 0, 1 + i, 12))),
   )
 }
+
+/** Instante (ISO con zona) como «11 oct 2026, 12:30» en la zona del usuario. */
+export function formatInstant(instant: string, locale: string, timeZone = DEFAULT_TIMEZONE): string {
+  return new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone,
+  }).format(new Date(instant))
+}
+
+/** Hora «12:30» de un instante en la zona del usuario. */
+export function formatInstantTime(instant: string, locale: string, timeZone = DEFAULT_TIMEZONE): string {
+  return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', timeZone }).format(new Date(instant))
+}

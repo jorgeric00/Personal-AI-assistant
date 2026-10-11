@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import jakarta.persistence.criteria.Predicate;
 
@@ -23,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.lifeos.common.error.ConflictException;
 import com.lifeos.common.error.FieldValidationException;
 import com.lifeos.common.error.NotFoundException;
+import com.lifeos.common.text.SearchText;
 import com.lifeos.notes.Note.State;
 import com.lifeos.notes.NoteDtos.NoteFlagsRequest;
 import com.lifeos.notes.NoteDtos.NoteRequest;
@@ -40,7 +40,6 @@ public class NoteService {
 
     private static final int EXCERPT_LENGTH = 240;
     private static final int TAG_MAX_LENGTH = 40;
-    private static final Pattern SPACES = Pattern.compile("\\s+");
 
     public enum View {
         ACTIVE, FAVORITES, ARCHIVED, TRASH
@@ -163,7 +162,7 @@ public class NoteService {
     private void apply(UUID userId, Note note, NoteRequest request) {
         String title = Objects.requireNonNullElse(request.title(), "").strip();
         String body = Objects.requireNonNullElse(request.body(), "").stripTrailing();
-        Set<String> tags = normalizeTags(request.tags());
+        Set<String> tags = SearchText.normalizeTags(request.tags());
         Set<UUID> taskIds = new LinkedHashSet<>(Objects.requireNonNullElse(request.taskIds(), List.of()));
         Map<UUID, TaskRef> found = taskService.refs(userId, taskIds);
         new FieldValidationException.Collector()
@@ -172,22 +171,6 @@ public class NoteService {
                 .add(found.size() != taskIds.size(), "taskIds", "note.tasks.invalid")
                 .throwIfAny();
         note.edit(title, body, tags, taskIds, clock.instant());
-    }
-
-    /** Etiquetas en minúsculas, sin "#" inicial, con los espacios agrupados y sin repetir. */
-    static Set<String> normalizeTags(List<String> tags) {
-        Set<String> result = new LinkedHashSet<>();
-        for (String tag : Objects.requireNonNullElse(tags, List.<String>of())) {
-            if (tag == null) {
-                continue;
-            }
-            String normalized = SPACES.matcher(tag.strip().replaceFirst("^#+", "").strip()).replaceAll(" ")
-                    .toLowerCase(java.util.Locale.ROOT);
-            if (!normalized.isEmpty()) {
-                result.add(normalized);
-            }
-        }
-        return result;
     }
 
     private Note load(UUID userId, UUID noteId) {
@@ -220,21 +203,17 @@ public class NoteService {
                 predicates.add(cb.equal(root.get("pinned"), filter.pinned()));
             }
             if (filter.tag() != null && !filter.tag().isBlank()) {
-                Set<String> tag = normalizeTags(List.of(filter.tag()));
+                Set<String> tag = SearchText.normalizeTags(List.of(filter.tag()));
                 predicates.add(cb.isMember(tag.isEmpty() ? "" : tag.iterator().next(), root.get("tags")));
             }
             if (filter.taskId() != null) {
                 predicates.add(cb.isMember(filter.taskId(), root.get("taskIds")));
             }
             for (String term : SearchText.terms(filter.query())) {
-                predicates.add(cb.like(root.get("searchText"), "%" + escapeLike(term) + "%", '\\'));
+                predicates.add(cb.like(root.get("searchText"), SearchText.containsPattern(term), '\\'));
             }
             return cb.and(predicates.toArray(Predicate[]::new));
         };
-    }
-
-    private static String escapeLike(String term) {
-        return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     private static NoteSummary toSummary(Note note) {

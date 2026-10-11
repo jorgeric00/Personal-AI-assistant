@@ -32,7 +32,15 @@ const defaultHandlers: Record<string, Handler> = {
 }
 
 /** Lecturas por defecto que dependen de un identificador. */
-const defaultPrefixHandlers: [string, Handler][] = [['GET /api/notes?view=ACTIVE&taskId=', () => json([])]]
+const emptyTotals = { incomeCents: 0, expenseCents: 0, balanceCents: 0 }
+const defaultPrefixHandlers: [string, Handler][] = [
+  ['GET /api/notes?view=ACTIVE&taskId=', () => json([])],
+  [
+    'GET /api/finance/summary?month=',
+    () =>
+      json({ month: '2026-10', currency: 'EUR', totals: emptyTotals, previousMonth: '2026-09', previousTotals: emptyTotals, byCategory: [] }),
+  ],
+]
 
 /** Sustituye fetch por un servidor falso: clave "MÉTODO /ruta". */
 export function mockFetch(handlers: Record<string, Handler>) {

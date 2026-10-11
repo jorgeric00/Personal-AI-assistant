@@ -147,3 +147,13 @@ export function TrashIcon() {
     </svg>
   )
 }
+
+export function FinanceIcon() {
+  return (
+    <svg {...base}>
+      <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3" />
+      <path d="M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H6.5A2.5 2.5 0 0 1 4 5.5" />
+      <circle cx="16" cy="13.5" r="1.2" />
+    </svg>
+  )
+}

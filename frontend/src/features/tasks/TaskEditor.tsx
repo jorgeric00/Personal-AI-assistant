@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { ApiError } from '../../api/client'
 import { addDays, weekdayNames } from '../../lib/date'
 import { useDateFormat } from '../../lib/useRelativeDate'
+import { Field } from '../../ui/Field'
 import { Sheet } from '../../ui/Sheet'
 import { RelatedNotes } from '../notes/RelatedNotes'
 import { useToast } from '../../ui/toast-context'
@@ -506,28 +507,4 @@ function notifyLabel(minutes: number, t: ReturnType<typeof useTranslation>['t'])
   if (minutes % 1440 === 0) return t('tasks.notify.days', { count: minutes / 1440 })
   if (minutes % 60 === 0) return t('tasks.notify.hours', { count: minutes / 60 })
   return t('tasks.notify.minutes', { count: minutes })
-}
-
-function Field({
-  label,
-  id,
-  error,
-  children,
-}: {
-  label: string
-  id: string
-  error?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="field">
-      <label htmlFor={id}>{label}</label>
-      {children}
-      {error && (
-        <p className="field-error" id={`${id}-error`}>
-          {error}
-        </p>
-      )}
-    </div>
-  )
 }

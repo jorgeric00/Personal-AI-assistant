@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
 
 import { useCurrentUser } from '../../auth/auth'
-import { formatLongDate, greetingKey } from '../../lib/date'
+import { formatLongDate, greetingKey, todayIso } from '../../lib/date'
 import { useDateFormat } from '../../lib/useRelativeDate'
 import { PlusIcon } from '../../ui/icons'
+import { formatMoney } from '../../lib/money'
+import { useMonthSummary } from '../finance/api'
 import { useNotes } from '../notes/api'
 import { NoteCard } from '../notes/NoteCard'
 import { useTasks } from '../tasks/api'
@@ -36,6 +38,7 @@ export function DashboardPage() {
   const today = useTasks('TODAY')
   const reminders = useTasks('UPCOMING', { kind: 'REMINDER' })
   const pinnedNotes = useNotes('ACTIVE', { pinned: true })
+  const month = useMonthSummary(todayIso(timeZone).slice(0, 7))
   const { completeTask, isCompleting } = useTaskActions()
   const openTask = (id: string) => navigate(`/tareas?tarea=${id}`)
 
@@ -65,6 +68,10 @@ export function DashboardPage() {
           <Link to="/notas?nueva=1" className="quick-action">
             <PlusIcon />
             {t('notes.kind')}
+          </Link>
+          <Link to="/finanzas?nuevo=EXPENSE" className="quick-action">
+            <PlusIcon />
+            {t('finance.kind.EXPENSE')}
           </Link>
         </div>
       </section>
@@ -145,6 +152,43 @@ export function DashboardPage() {
               <NoteCard key={note.id} note={note} onOpen={(id) => navigate(`/notas?nota=${id}`)} />
             ))}
           </ul>
+        )}
+      </section>
+
+      <section className="stack-sm" aria-labelledby="month-title">
+        <div className="section-header">
+          <h2 id="month-title" className="h2">
+            {t('dashboard.thisMonth')}
+          </h2>
+          <Link to="/finanzas" className="link">
+            {t('common.seeAll')}
+          </Link>
+        </div>
+        {month.isPending ? (
+          <div className="card skeleton" aria-hidden="true" />
+        ) : !month.data || (month.data.totals.incomeCents === 0 && month.data.totals.expenseCents === 0) ? (
+          <p className="card muted">{t('dashboard.thisMonthEmpty')}</p>
+        ) : (
+          <Link to="/finanzas" className="card month-card">
+            <span>
+              <span className="stat-label">{t('finance.income')}</span>
+              <span className="stat-value amount-income">
+                {formatMoney(month.data.totals.incomeCents, month.data.currency, locale)}
+              </span>
+            </span>
+            <span>
+              <span className="stat-label">{t('finance.expenses')}</span>
+              <span className="stat-value amount-expense">
+                {formatMoney(month.data.totals.expenseCents, month.data.currency, locale)}
+              </span>
+            </span>
+            <span>
+              <span className="stat-label">{t('finance.balance')}</span>
+              <span className={`stat-value ${month.data.totals.balanceCents < 0 ? 'amount-expense' : 'amount-income'}`}>
+                {formatMoney(month.data.totals.balanceCents, month.data.currency, locale, { signed: true })}
+              </span>
+            </span>
+          </Link>
         )}
       </section>
     </div>

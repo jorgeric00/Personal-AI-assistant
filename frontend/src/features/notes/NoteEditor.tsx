@@ -9,7 +9,7 @@ import { useToast } from '../../ui/toast-context'
 import { ArchiveIcon, CloseIcon, PinIcon, StarIcon, TrashIcon } from '../../ui/icons'
 import { useTasks } from '../tasks/api'
 import { useNoteMutations, useNoteTags, type Note, type NoteInput } from './api'
-import { TagInput } from './TagInput'
+import { TagInput } from '../../ui/TagInput'
 import { useAutosave } from './useAutosave'
 
 interface NoteEditorProps {

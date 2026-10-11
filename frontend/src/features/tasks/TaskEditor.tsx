@@ -5,6 +5,7 @@ import { ApiError } from '../../api/client'
 import { addDays, weekdayNames } from '../../lib/date'
 import { useDateFormat } from '../../lib/useRelativeDate'
 import { Sheet } from '../../ui/Sheet'
+import { RelatedNotes } from '../notes/RelatedNotes'
 import { useToast } from '../../ui/toast-context'
 import { usePushState } from '../notifications/push'
 import {
@@ -472,6 +473,8 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
           </div>
         </section>
       )}
+
+      {task && <RelatedNotes taskId={task.id} />}
 
       {task && (
         <section className="sheet-section">

@@ -4,7 +4,7 @@ import { NavLink, Outlet } from 'react-router'
 
 import type { ParseKeys } from 'i18next'
 
-import { SettingsIcon, TasksIcon, TodayIcon } from '../ui/icons'
+import { NotesIcon, SettingsIcon, TasksIcon, TodayIcon } from '../ui/icons'
 
 interface NavItem {
   to: string
@@ -17,6 +17,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'nav.today', icon: <TodayIcon />, end: true },
   { to: '/tareas', label: 'nav.tasks', icon: <TasksIcon /> },
+  { to: '/notas', label: 'nav.notes', icon: <NotesIcon /> },
   { to: '/ajustes', label: 'nav.settings', icon: <SettingsIcon /> },
 ]
 

@@ -12,7 +12,7 @@ técnicas en [docs/arquitectura.md](docs/arquitectura.md).
 | Fase | Contenido | Estado |
 | --- | --- | --- |
 | 1. Base | PWA instalable, inicio de sesión, Docker Compose, CI | ✅ |
-| 2. Día a día | Tareas y recordatorios con notificaciones, notas, dashboard de hoy | En curso: tareas, recordatorios, calendario, avisos y dashboard ✅ · notas pendiente |
+| 2. Día a día | Tareas y recordatorios con notificaciones, notas, dashboard de hoy | ✅ |
 | 3. Finanzas | Movimientos, presupuestos, resúmenes mensuales | Pendiente |
 | 4. Entrenador personal | Entrenamientos, alimentación, evolución física, agenda y hábitos | Pendiente |
 

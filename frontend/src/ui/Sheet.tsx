@@ -9,13 +9,17 @@ interface SheetProps {
   onClose: () => void
   children: ReactNode
   footer?: ReactNode
+  /** Botones extra junto al de cerrar. */
+  headerActions?: ReactNode
+  /** Ocupa casi toda la pantalla en el móvil (editores de texto largo). */
+  tall?: boolean
 }
 
 /**
  * Panel modal: hoja inferior en el móvil y diálogo centrado en escritorio.
  * Cierra con Escape o tocando fuera, devuelve el foco al elemento que lo abrió.
  */
-export function Sheet({ title, onClose, children, footer }: SheetProps) {
+export function Sheet({ title, onClose, children, footer, headerActions, tall = false }: SheetProps) {
   const { t } = useTranslation()
   const titleId = useId()
   const panel = useRef<HTMLDivElement>(null)
@@ -57,14 +61,17 @@ export function Sheet({ title, onClose, children, footer }: SheetProps) {
 
   return createPortal(
     <div className="sheet-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} ref={panel}>
+      <div className={tall ? 'sheet sheet-tall' : 'sheet'} role="dialog" aria-modal="true" aria-labelledby={titleId} ref={panel}>
         <header className="sheet-header">
           <h2 id={titleId} className="h2">
             {title}
           </h2>
-          <button type="button" className="icon-button" onClick={onClose} aria-label={t('common.close')}>
-            <CloseIcon />
-          </button>
+          <div className="sheet-header-actions">
+            {headerActions}
+            <button type="button" className="icon-button" onClick={onClose} aria-label={t('common.close')}>
+              <CloseIcon />
+            </button>
+          </div>
         </header>
         <div className="sheet-body">{children}</div>
         {footer && <footer className="sheet-footer">{footer}</footer>}

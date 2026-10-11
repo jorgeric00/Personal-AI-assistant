@@ -95,3 +95,55 @@ export function ChevronRightIcon() {
     </svg>
   )
 }
+
+export function NotesIcon() {
+  return (
+    <svg {...base}>
+      <path d="M6 3.5h8l4.5 4.5v12.5H6z" />
+      <path d="M14 3.5V8h4.5M9 12.5h6M9 16h4" />
+    </svg>
+  )
+}
+
+export function SearchIcon() {
+  return (
+    <svg {...base}>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="M16 16l4 4" />
+    </svg>
+  )
+}
+
+export function PinIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg {...base} fill={filled ? 'currentColor' : 'none'}>
+      <path d="M9 3.5h6l-1 6 3.5 3.5h-11L10 9.5z" />
+      <path d="M12 13v7.5" fill="none" />
+    </svg>
+  )
+}
+
+export function StarIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg {...base} fill={filled ? 'currentColor' : 'none'}>
+      <path d="M12 3.8l2.5 5.1 5.6.8-4 3.9 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-3.9 5.6-.8z" />
+    </svg>
+  )
+}
+
+export function ArchiveIcon() {
+  return (
+    <svg {...base}>
+      <rect x="3.5" y="4.5" width="17" height="4" rx="1" />
+      <path d="M5 8.5v10a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-10M10 12.5h4" />
+    </svg>
+  )
+}
+
+export function TrashIcon() {
+  return (
+    <svg {...base}>
+      <path d="M4.5 7h15M10 4h4M6.5 7l.9 12a1.5 1.5 0 0 0 1.5 1.4h6.2a1.5 1.5 0 0 0 1.5-1.4l.9-12M10 11v5.5M14 11v5.5" />
+    </svg>
+  )
+}

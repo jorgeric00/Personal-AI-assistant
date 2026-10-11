@@ -17,6 +17,8 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.BatchSize;
 
+import com.lifeos.common.text.SearchText;
+
 @Entity
 @Table(name = "note")
 public class Note {

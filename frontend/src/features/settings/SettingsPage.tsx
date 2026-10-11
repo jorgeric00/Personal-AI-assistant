@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router'
 import { useCurrentUser, useLogout, useUpdateLanguage } from '../../auth/auth'
 import { LANGUAGE_NAMES, SUPPORTED_LANGUAGES, isLanguage } from '../../i18n'
 import { useThemePreference, type ThemePreference } from '../../theme/theme'
+import { NotificationSettings } from '../notifications/NotificationSettings'
 import { useInstallPrompt } from './useInstallPrompt'
 
 const THEME_OPTIONS: { value: ThemePreference; label: ParseKeys }[] = [
@@ -95,6 +96,8 @@ export function SettingsPage() {
           ))}
         </div>
       </section>
+
+      <NotificationSettings />
 
       <section className="card stack" aria-labelledby="install-title">
         <h2 id="install-title" className="h2">

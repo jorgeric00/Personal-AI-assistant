@@ -27,6 +27,10 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | Fechas en UTC en la base de datos (`timestamptz`) y zona `Europe/Madrid` para mostrar | Evita errores con los cambios de hora. La zona del usuario viene de la configuración y se usa en el frontend. |
 | Errores con `application/problem+json` (RFC 9457) | Formato estándar; los mensajes están en español y los errores de validación se devuelven por campo. |
 | Internacionalización: español por defecto e inglés | En la app, i18next con los textos en `frontend/src/i18n/locales/` (el español es la referencia y TypeScript obliga a que el inglés tenga las mismas claves). En el servidor, `messages*.properties` según la cabecera `Accept-Language`, que la app envía siempre; una prueba comprueba que ambos ficheros tienen las mismas claves. El idioma elegido se guarda en la cuenta (`app_user.locale`) para usarlo también en lo que genera el servidor, como las notificaciones. Las fechas se formatean con `Intl` según el idioma. |
+| Una tarea recurrente es una sola fila | `due_date` guarda la próxima ocurrencia pendiente y las completadas se registran en `task_completion` (clave `task_id` + fecha, así no hay duplicados). Las fechas se calculan con la regla (frecuencia, intervalo, días de la semana, hasta) a partir de `recurrence_anchor`. Si se completa una ocurrencia atrasada, la siguiente salta a hoy o después en lugar de acumular atrasos. Evita generar filas por adelantado y permite editar la regla sin reescribir el historial. |
+| Tareas y recordatorios en la misma tabla (`kind`) | Comparten fecha, hora, repetición, categoría y aviso; los recordatorios no tienen fecha límite. |
+| Notificaciones Web Push propias, sin servicios de terceros | El servidor cifra los mensajes (RFC 8291, `aes128gcm`) y los firma con VAPID (RFC 8292) usando solo la criptografía del JDK, sin dependencias extra. Las claves VAPID se pueden pasar por variables de entorno; si no, se generan al arrancar y se guardan en `server_key`. El contenido viaja cifrado de extremo a extremo hasta el dispositivo. |
+| Envío de avisos con una tarea programada cada minuto | `ReminderNotifier` busca las ocurrencias cuyo aviso ya toca. Antes de enviar, inserta en `task_notification` (clave tarea + fecha), así cada ocurrencia se avisa una sola vez aunque haya varios procesos; si ningún dispositivo lo recibe, libera la marca para reintentar. Los avisos con más de 2 horas de retraso (por ejemplo, tras tener el servidor apagado) se descartan para no enviar ráfagas antiguas. Las suscripciones que el servicio push da por caducadas (404/410) se borran. |
 | Migraciones con Flyway, `ddl-auto: validate` | El esquema solo cambia con migraciones versionadas. |
 | Pruebas de integración con Testcontainers | Se prueba contra PostgreSQL real, no contra una base de datos en memoria. |
 
@@ -43,14 +47,22 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | --- | --- |
 | `app_user` | Cuenta: correo (único, sin distinguir mayúsculas), nombre visible, hash de la contraseña, idioma, fechas. |
 | `spring_session`, `spring_session_attributes` | Sesiones activas. |
+| `task_category` | Categorías de tareas del usuario: nombre (único sin distinguir mayúsculas) y color. |
+| `task` | Tareas y recordatorios: tipo, título, descripción, fecha y hora, fecha límite, prioridad, estado (pendiente, aplazada, hecha), regla de repetición y minutos de antelación del aviso. |
+| `task_completion` | Ocurrencias completadas de cada tarea, con la fecha de la ocurrencia y cuándo se completó. |
+| `push_subscription` | Dispositivos con notificaciones activadas: endpoint del servicio push y claves públicas del navegador. |
+| `task_notification` | Avisos ya enviados por tarea y ocurrencia, para no repetirlos. |
+| `server_key` | Claves generadas por el servidor (VAPID). |
 
 ## Riesgos y temas abiertos
 
 - **Despliegue.** Para usarla fuera de casa el servidor tiene que ser accesible desde el móvil y servirse por
   HTTPS (necesario para instalar la PWA, para las notificaciones y para la cookie `Secure`).
   Opciones: un VPS pequeño con Caddy, o un equipo en casa con Tailscale. Pendiente de decidir.
-- **Notificaciones en iOS.** Solo funcionan con la app añadida a la pantalla de inicio y requieren claves VAPID
-  y un proceso en el servidor que envíe los avisos. Se implementa en la fase 2.
+- **Notificaciones en iOS.** Solo funcionan con la app añadida a la pantalla de inicio (iOS 16.4 o posterior);
+  la pantalla de Ajustes lo explica cuando detecta un iPhone sin instalar. Los avisos se envían por los
+  servicios push de Apple, Google o Mozilla, que solo ven el mensaje cifrado.
+- **Precisión de los avisos.** Se comprueban cada minuto, así que pueden llegar hasta un minuto tarde.
 - **Sin conexión.** Por ahora la app necesita conexión para ver y guardar datos. Un modo sin conexión con
   sincronización añadiría mucha complejidad; se valorará cuando haya módulos en uso.
 - **Copias de seguridad.** Los datos viven en un volumen de Docker. Antes de usarla de verdad hay que

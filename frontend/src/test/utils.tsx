@@ -4,13 +4,16 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { vi } from 'vitest'
 
 import { routes } from '../app/router'
+import { ToastProvider } from '../ui/Toast'
 
 export function renderApp(initialPath = '/') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   const router = createMemoryRouter(routes, { initialEntries: [initialPath] })
   render(
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </QueryClientProvider>,
   )
   return { router, queryClient }
@@ -18,11 +21,18 @@ export function renderApp(initialPath = '/') {
 
 type Handler = (init: RequestInit | undefined) => Response | Promise<Response>
 
+/** Respuestas por defecto para las lecturas que hacen muchas pantallas (listas vacías). */
+const defaultHandlers: Record<string, Handler> = {
+  'GET /api/tasks?view=TODAY': () => json([]),
+  'GET /api/tasks?view=UPCOMING&kind=REMINDER': () => json([]),
+  'GET /api/task-categories': () => json([]),
+}
+
 /** Sustituye fetch por un servidor falso: clave "MÉTODO /ruta". */
 export function mockFetch(handlers: Record<string, Handler>) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const key = `${init?.method ?? 'GET'} ${String(input)}`
-    const handler = handlers[key]
+    const handler = handlers[key] ?? defaultHandlers[key]
     if (!handler) throw new Error(`Petición inesperada: ${key}`)
     return handler(init)
   })

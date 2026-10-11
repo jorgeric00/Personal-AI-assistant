@@ -26,3 +26,62 @@ export function formatLongDate(date: Date, locale: string, timeZone = DEFAULT_TI
   }).format(date)
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
+
+/** Fecha ISO (AAAA-MM-DD) de hoy en la zona horaria indicada. */
+export function todayIso(timeZone = DEFAULT_TIMEZONE, now = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
+}
+
+/** Suma días a una fecha ISO sin depender de la zona horaria del dispositivo. */
+export function addDays(iso: string, days: number): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(Date.UTC(y, m - 1, d + days))
+  return date.toISOString().slice(0, 10)
+}
+
+/** Diferencia en días entre dos fechas ISO (b - a). */
+export function daysBetween(a: string, b: string): number {
+  const toUtc = (iso: string) => {
+    const [y, m, d] = iso.split('-').map(Number)
+    return Date.UTC(y, m - 1, d)
+  }
+  return Math.round((toUtc(b) - toUtc(a)) / 86_400_000)
+}
+
+function isoToUtcDate(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d, 12))
+}
+
+/** Fecha corta y legible: «lun, 13 oct». Se formatea en UTC porque la fecha ISO ya es local. */
+export function formatShortDate(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
+    isoToUtcDate(iso),
+  )
+}
+
+export function formatMonthYear(iso: string, locale: string): string {
+  const text = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+    isoToUtcDate(iso),
+  )
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** «09:30:00» → «09:30». */
+export function formatTime(time: string | null | undefined): string {
+  return time ? time.slice(0, 5) : ''
+}
+
+/** Día de la semana ISO (1 = lunes … 7 = domingo). */
+export function isoWeekday(iso: string): number {
+  const day = isoToUtcDate(iso).getUTCDay()
+  return day === 0 ? 7 : day
+}
+
+/** Nombres cortos de los días de la semana empezando en lunes. */
+export function weekdayNames(locale: string, style: 'narrow' | 'short' = 'short'): string[] {
+  // 2024-01-01 fue lunes
+  return Array.from({ length: 7 }, (_, i) =>
+    new Intl.DateTimeFormat(locale, { weekday: style, timeZone: 'UTC' }).format(new Date(Date.UTC(2024, 0, 1 + i, 12))),
+  )
+}

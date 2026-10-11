@@ -6,3 +6,7 @@ lifeos:
   login:
     max-failed-attempts: 3
     lockout: 15m
+  push:
+    subject: mailto:test@example.com
+  reminders:
+    enabled: false

@@ -57,6 +57,39 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.badRequest().body(problem(HttpStatus.BAD_REQUEST, "malformed"));
     }
 
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(org.springframework.beans.TypeMismatchException ex,
+            HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.badRequest().body(problem(HttpStatus.BAD_REQUEST, "malformed"));
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMissingServletRequestParameter(
+            org.springframework.web.bind.MissingServletRequestParameterException ex, HttpHeaders headers,
+            HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.badRequest().body(problem(HttpStatus.BAD_REQUEST, "malformed"));
+    }
+
+    @ExceptionHandler(FieldValidationException.class)
+    ResponseEntity<ProblemDetail> handleFieldValidation(FieldValidationException ex) {
+        var locale = LocaleContextHolder.getLocale();
+        Map<String, String> errors = new LinkedHashMap<>();
+        ex.fieldMessageKeys().forEach((field, key) -> errors.put(field, messages.getMessage(key, null, key, locale)));
+        ProblemDetail problem = problem(HttpStatus.BAD_REQUEST, "validation");
+        problem.setProperty("errors", errors);
+        return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    ResponseEntity<ProblemDetail> handleNotFound(NotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem(HttpStatus.NOT_FOUND, "not-found"));
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    ResponseEntity<ProblemDetail> handleConflict(ConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem(HttpStatus.CONFLICT, ex.code()));
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     ResponseEntity<ProblemDetail> handleAuthentication(AuthenticationException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem(HttpStatus.UNAUTHORIZED, "credentials"));

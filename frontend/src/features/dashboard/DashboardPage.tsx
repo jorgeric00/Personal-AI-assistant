@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link, useNavigate } from 'react-router'
 
 import { useCurrentUser } from '../../auth/auth'
-import { intlLocale, isLanguage } from '../../i18n'
-import { DEFAULT_TIMEZONE, formatLongDate, greetingKey } from '../../lib/date'
+import { formatLongDate, greetingKey } from '../../lib/date'
+import { useDateFormat } from '../../lib/useRelativeDate'
+import { PlusIcon } from '../../ui/icons'
+import { useTasks } from '../tasks/api'
+import { TaskItem } from '../tasks/TaskItem'
+import { useTaskActions } from '../tasks/useTaskActions'
+
+const TODAY_LIMIT = 6
+const REMINDERS_LIMIT = 3
 
 function useNow(intervalMs = 60_000) {
   const [now, setNow] = useState(() => new Date())
@@ -15,12 +23,20 @@ function useNow(intervalMs = 60_000) {
 }
 
 export function DashboardPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { data: user } = useCurrentUser()
+  const { locale, timeZone, dateTime } = useDateFormat()
+  const navigate = useNavigate()
   const now = useNow()
-  const timeZone = user?.timezone ?? DEFAULT_TIMEZONE
-  const locale = intlLocale(isLanguage(i18n.language) ? i18n.language : undefined)
   const greeting = t(greetingKey(now, timeZone))
+
+  const today = useTasks('TODAY')
+  const reminders = useTasks('UPCOMING', { kind: 'REMINDER' })
+  const { completeTask, isCompleting } = useTaskActions()
+  const openTask = (id: string) => navigate(`/tareas?tarea=${id}`)
+
+  const todayTasks = today.data ?? []
+  const nextReminders = (reminders.data ?? []).slice(0, REMINDERS_LIMIT)
 
   return (
     <div className="page stack-lg">
@@ -29,11 +45,77 @@ export function DashboardPage() {
         <h1 className="h1">{user ? t('greeting.withName', { greeting, name: user.displayName }) : greeting}</h1>
       </header>
 
-      <section className="card empty-state" aria-labelledby="empty-title">
-        <h2 id="empty-title" className="h2">
-          {t('dashboard.emptyTitle')}
+      <section aria-labelledby="quick-title" className="stack-sm">
+        <h2 id="quick-title" className="visually-hidden">
+          {t('dashboard.quickAdd')}
         </h2>
-        <p className="muted">{t('dashboard.emptyBody')}</p>
+        <div className="quick-actions">
+          <Link to="/tareas?nueva=TASK" className="quick-action">
+            <PlusIcon />
+            {t('tasks.kind.TASK')}
+          </Link>
+          <Link to="/tareas?nueva=REMINDER" className="quick-action">
+            <PlusIcon />
+            {t('tasks.kind.REMINDER')}
+          </Link>
+        </div>
+      </section>
+
+      <section className="stack-sm" aria-labelledby="today-title">
+        <div className="section-header">
+          <h2 id="today-title" className="h2">
+            {t('dashboard.forToday')}
+          </h2>
+          <Link to="/tareas" className="link">
+            {t('common.seeAll')}
+          </Link>
+        </div>
+        {today.isPending ? (
+          <div className="card skeleton" aria-hidden="true" />
+        ) : todayTasks.length === 0 ? (
+          <p className="card muted">{t('dashboard.forTodayEmpty')}</p>
+        ) : (
+          <>
+            <ul className="task-list card">
+              {todayTasks.slice(0, TODAY_LIMIT).map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  onOpen={() => openTask(task.id)}
+                  onComplete={completeTask}
+                  completing={isCompleting(task.id)}
+                />
+              ))}
+            </ul>
+            {todayTasks.length > TODAY_LIMIT && (
+              <Link to="/tareas" className="link">
+                {t('dashboard.moreToday', { count: todayTasks.length - TODAY_LIMIT })}
+              </Link>
+            )}
+          </>
+        )}
+      </section>
+
+      <section className="stack-sm" aria-labelledby="reminders-title">
+        <h2 id="reminders-title" className="h2">
+          {t('dashboard.nextReminders')}
+        </h2>
+        {reminders.isPending ? (
+          <div className="card skeleton" aria-hidden="true" />
+        ) : nextReminders.length === 0 ? (
+          <p className="card muted">{t('dashboard.nextRemindersEmpty')}</p>
+        ) : (
+          <ul className="card list-plain reminder-list">
+            {nextReminders.map((reminder) => (
+              <li key={reminder.id}>
+                <button type="button" className="reminder-row" onClick={() => openTask(reminder.id)}>
+                  <span className="reminder-when">{dateTime(reminder.dueDate, reminder.dueTime)}</span>
+                  <span className="task-title">{reminder.title}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   )

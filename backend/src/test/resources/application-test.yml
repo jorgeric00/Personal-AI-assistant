@@ -1,0 +1,8 @@
+lifeos:
+  admin:
+    email: Propietario@Example.com
+    password: contraseña-de-prueba-segura
+    display-name: Jorge
+  login:
+    max-failed-attempts: 3
+    lockout: 15m

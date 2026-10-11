@@ -1,0 +1,55 @@
+# Entorno completo de LifeOS: base de datos, API y aplicación web.
+# Uso: cp .env.example .env  (y rellena los valores)  →  docker compose up -d --build
+name: lifeos
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lifeos
+      POSTGRES_USER: lifeos
+      POSTGRES_PASSWORD: ${LIFEOS_DB_PASSWORD:?Define LIFEOS_DB_PASSWORD en .env}
+      TZ: Europe/Madrid
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifeos -d lifeos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:${LIFEOS_DB_PORT:-5432}:5432"
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      LIFEOS_DB_URL: jdbc:postgresql://db:5432/lifeos
+      LIFEOS_DB_USER: lifeos
+      LIFEOS_DB_PASSWORD: ${LIFEOS_DB_PASSWORD}
+      LIFEOS_ADMIN_EMAIL: ${LIFEOS_ADMIN_EMAIL:-}
+      LIFEOS_ADMIN_PASSWORD: ${LIFEOS_ADMIN_PASSWORD:-}
+      LIFEOS_ADMIN_NAME: ${LIFEOS_ADMIN_NAME:-}
+      LIFEOS_COOKIE_SECURE: ${LIFEOS_COOKIE_SECURE:-false}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 40s
+      retries: 10
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${LIFEOS_HTTP_PORT:-8080}:8080"
+
+volumes:
+  db-data:

@@ -151,7 +151,8 @@ describe('notas', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Mover a la papelera' }))
 
     await screen.findByText('Nota movida a la papelera')
-    expect(screen.queryByRole('dialog')).toBeNull()
+    // El aviso puede aparecer un instante antes de que se cierre la hoja
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     await user.click(screen.getByRole('button', { name: 'Deshacer' }))
     await waitFor(() => expect(actions).toEqual(['trash', 'restore']))
   })

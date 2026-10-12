@@ -80,7 +80,7 @@ class FitnessIntegrationTest {
     @Test
     void rejectsOutOfRangeValuesWithFieldMessages() {
         HttpResponse<String> response = api.put("/api/fitness/profile", """
-                {"heightCm":17.85,"daysPerWeek":9,"birthDate":"2030-01-01"}
+                {"heightCm":17.5,"daysPerWeek":9,"birthDate":"2030-01-01"}
                 """);
         assertThat(response.statusCode()).isEqualTo(400);
         assertThat(JsonPath.<String>read(response.body(), "$.errors.heightCm")).contains("50 y 260");

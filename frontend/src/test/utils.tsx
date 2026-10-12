@@ -40,6 +40,7 @@ const defaultPrefixHandlers: [string, Handler][] = [
   ['GET /api/finance/budgets?month=', () => json([])],
   ['GET /api/agenda?from=', () => json([])],
   ['GET /api/nutrition/plan?from=', () => json([])],
+  ['GET /api/habits?from=', () => json([])],
   [
     'GET /api/finance/summary?month=',
     () =>

@@ -52,6 +52,8 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | Objetivos de alimentación opcionales y puestos por el usuario | Calorías, macros y agua son opcionales; la app no los calcula. Si se ponen menos de 1200 kcal se muestra un aviso, y el formulario recuerda que no sustituye a un profesional de la salud o de la nutrición. |
 | Diario solo de lo ya comido | No se admiten días futuros en el diario (lo planificado irá en la planificación semanal). Una comida habitual es una plantilla: al registrarla se copian sus alimentos al día y después se editan sueltos. El resumen semanal hace medias solo con los días que tienen algo registrado. |
 | Plan semanal de comidas separado del diario | Lo planificado vive en `planned_meal` y nunca suma en el diario. Al «pasarlo al diario» (solo hoy o días anteriores, una vez) se copian los alimentos de su comida habitual; si no tiene, se anota solo el título, sin nutrientes. Las calorías planificadas y la lista de la compra se calculan en la app a partir de las comidas habituales, sin estimar nada más. Borrar una comida habitual deja el plan con su título. La preparación anticipada es un día opcional (como tarde, el de la comida) y una marca de «preparada». «Repetir la semana anterior» copia el plan sin marcas. |
+| Hábitos sin rachas que se pierdan | Un hábito es diario (todos los días o los días elegidos) o semanal (de 1 a 7 veces por semana, cualquier día), y se cuenta desde el día en que se crea. Cada día cumplido es una fila en `habit_check` (como mucho una por día, solo hoy o días pasados). La app calcula el progreso de la semana, el porcentaje de las últimas 4 semanas frente a las 4 anteriores y una cuadrícula de 12 semanas; no muestra rachas, y lo que aún puede cumplirse (hoy sin marcar, la semana en curso de un semanal) no cuenta como fallado. Archivar oculta el hábito y conserva el historial; borrarlo pide confirmación porque elimina el historial. |
+| Ajustes fuera de la barra inferior en el móvil | Con Hábitos hay siete secciones en la barra inferior; Ajustes se abre desde el icono de la cabecera de Hoy en el móvil y sigue en la barra lateral en el escritorio. |
 | Migraciones con Flyway, `ddl-auto: validate` | El esquema solo cambia con migraciones versionadas. |
 | Pruebas de integración con Testcontainers | Se prueba contra PostgreSQL real, no contra una base de datos en memoria. |
 
@@ -97,6 +99,7 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | `food_entry` | Alimentos anotados: fecha, comida, nombre, cantidad y unidad, calorías y macros (todo opcional) y si los valores son estimados. |
 | `saved_meal` / `saved_meal_item` | Comidas habituales con sus alimentos, para registrarlas de una vez. |
 | `planned_meal` | Plan semanal: día, comida, título, comida habitual opcional, notas, día de preparación, si está preparada y si ya se pasó al diario. |
+| `habit` / `habit_check` | Hábitos (nombre, color, frecuencia diaria con días opcionales o veces por semana, fecha de inicio, archivado) y los días en que se cumplieron. |
 | `finance_recurring` | Reglas de movimientos recurrentes: importe, categoría, cuenta, descripción, frecuencia, cada cuántos, inicio, fin y próxima fecha. Los movimientos generados guardan `recurring_id` y la fecha de su aparición. |
 
 ## Riesgos y temas abiertos

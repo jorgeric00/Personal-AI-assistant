@@ -7,6 +7,7 @@ import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { FinancePage } from '../features/finance/FinancePage'
 import { FitnessPage } from '../features/fitness/FitnessPage'
 import { WorkoutPage } from '../features/fitness/WorkoutPage'
+import { HabitsPage } from '../features/habits/HabitsPage'
 import { NotesPage } from '../features/notes/NotesPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { TasksPage } from '../features/tasks/TasksPage'
@@ -27,6 +28,7 @@ export const routes: RouteObject[] = [
           { path: 'notas', element: <NotesPage /> },
           { path: 'entreno', element: <FitnessPage /> },
           { path: 'entreno/sesion/:id', element: <WorkoutPage /> },
+          { path: 'habitos', element: <HabitsPage /> },
           { path: 'ajustes', element: <SettingsPage /> },
         ],
       },

@@ -198,3 +198,136 @@ export function useSaveRoutine() {
 export function useDeleteRoutine() {
   return useFitnessMutation((id: string) => apiFetch<void>(`/api/fitness/routines/${id}`, { method: 'DELETE' }))
 }
+
+export interface WorkoutSet {
+  reps: number | null
+  weightKg: number | null
+  durationSeconds: number | null
+  distanceKm: number | null
+  done: boolean
+}
+
+/** Objetivo copiado de la rutina al empezar; todo nulo en un entrenamiento libre. */
+export interface WorkoutTarget {
+  targetSets: number | null
+  targetRepsMin: number | null
+  targetRepsMax: number | null
+  targetWeightKg: number | null
+  targetDurationSeconds: number | null
+  targetDistanceKm: number | null
+  restSeconds: number | null
+}
+
+export interface WorkoutExercise extends WorkoutTarget {
+  id: string
+  exercise: Routine['exercises'][number]['exercise']
+  notes: string | null
+  sets: (WorkoutSet & { id: string })[]
+  /** Series hechas la última vez que se terminó un entrenamiento con este ejercicio. */
+  previous: { workoutId: string; date: string; sets: (WorkoutSet & { id: string })[] } | null
+}
+
+export interface Workout {
+  id: string
+  routineId: string | null
+  name: string
+  date: string
+  finished: boolean
+  finishedAt: string | null
+  effort: number | null
+  notes: string | null
+  exercises: WorkoutExercise[]
+}
+
+export interface WorkoutInput {
+  name: string
+  date: string
+  effort: number | null
+  notes: string | null
+  finished: boolean
+  exercises: (WorkoutTarget & { exerciseId: string; notes: string | null; sets: WorkoutSet[] })[]
+}
+
+export interface WorkoutSummary {
+  id: string
+  routineId: string | null
+  name: string
+  date: string
+  finished: boolean
+  finishedAt: string | null
+  exerciseCount: number
+  doneSets: number
+}
+
+/** Mejores marcas de un ejercicio; cada valor con la fecha en que se logró. */
+export interface ExerciseRecord {
+  exerciseId: string
+  exerciseName: string
+  type: ExerciseType
+  sessions: number
+  bestWeightKg: number | null
+  bestWeightReps: number | null
+  bestWeightDate: string | null
+  bestReps: number | null
+  bestRepsDate: string | null
+  longestDurationSeconds: number | null
+  longestDurationDate: string | null
+  longestDistanceKm: number | null
+  longestDistanceDate: string | null
+}
+
+const workoutKeys = {
+  list: ['fitness', 'workouts'] as const,
+  detail: (id: string) => ['fitness', 'workout', id] as const,
+  records: ['fitness', 'records'] as const,
+}
+
+/** Entrenamientos del más reciente al más antiguo, en curso y terminados. */
+export function useWorkouts(enabled = true) {
+  return useQuery({ queryKey: workoutKeys.list, queryFn: () => apiFetch<WorkoutSummary[]>('/api/fitness/workouts'), enabled })
+}
+
+export function useWorkout(id: string) {
+  return useQuery({ queryKey: workoutKeys.detail(id), queryFn: () => apiFetch<Workout>(`/api/fitness/workouts/${id}`) })
+}
+
+export function useRecords() {
+  return useQuery({ queryKey: workoutKeys.records, queryFn: () => apiFetch<ExerciseRecord[]>('/api/fitness/records') })
+}
+
+export function useStartWorkout() {
+  return useFitnessMutation((input: { routineId: string | null; date: string | null }) =>
+    apiFetch<Workout>('/api/fitness/workouts', { method: 'POST', body: input }),
+  )
+}
+
+/**
+ * Guarda el entrenamiento sin volver a pedir su detalle: la pantalla de la sesión mantiene su propio estado
+ * mientras se edita, y solo se refrescan el historial, los récords y los ejercicios en uso.
+ */
+export function useSaveWorkout() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: WorkoutInput }) =>
+      apiFetch<Workout>(`/api/fitness/workouts/${id}`, { method: 'PUT', body: input }),
+    onSuccess: (workout) => {
+      queryClient.setQueryData(workoutKeys.detail(workout.id), workout)
+      return queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === 'fitness' && query.queryKey[1] !== 'workout',
+      })
+    },
+  })
+}
+
+export function useDeleteWorkout() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/api/fitness/workouts/${id}`, { method: 'DELETE' }),
+    onSuccess: (_, id) => {
+      queryClient.removeQueries({ queryKey: workoutKeys.detail(id) })
+      return queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === 'fitness' && query.queryKey[1] !== 'workout',
+      })
+    },
+  })
+}

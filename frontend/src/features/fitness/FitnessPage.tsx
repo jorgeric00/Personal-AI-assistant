@@ -12,12 +12,14 @@ import { ProfileView } from './ProfileView'
 import { ProgressView } from './ProgressView'
 import { RoutineEditor } from './RoutineEditor'
 import { RoutinesView } from './RoutinesView'
+import { WorkoutsView } from './WorkoutsView'
 
-type Tab = 'PROGRESS' | 'ROUTINES' | 'EXERCISES' | 'PROFILE'
+type Tab = 'WORKOUTS' | 'PROGRESS' | 'ROUTINES' | 'EXERCISES' | 'PROFILE'
 
 const TABS: { value: Tab; label: ParseKeys }[] = [
-  { value: 'PROGRESS', label: 'fitness.views.progress' },
+  { value: 'WORKOUTS', label: 'fitness.views.workouts' },
   { value: 'ROUTINES', label: 'fitness.views.routines' },
+  { value: 'PROGRESS', label: 'fitness.views.progress' },
   { value: 'EXERCISES', label: 'fitness.views.exercises' },
   { value: 'PROFILE', label: 'fitness.views.profile' },
 ]
@@ -32,8 +34,8 @@ export function FitnessPage() {
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
   const measurements = useMeasurements()
-  const tab = TABS.find((item) => item.value === params.get('vista'))?.value ?? 'PROGRESS'
-  const needsCatalog = tab === 'ROUTINES' || tab === 'EXERCISES' || params.has('rutina') || params.has('ejercicio')
+  const tab = TABS.find((item) => item.value === params.get('vista'))?.value ?? 'WORKOUTS'
+  const needsCatalog = tab === 'WORKOUTS' || tab === 'ROUTINES' || tab === 'EXERCISES' || params.has('rutina') || params.has('ejercicio')
   const exercises = useExercises(needsCatalog)
   const routines = useRoutines(needsCatalog)
 
@@ -60,7 +62,7 @@ export function FitnessPage() {
   )
 
   const action =
-    tab === 'ROUTINES'
+    tab === 'ROUTINES' || tab === 'WORKOUTS'
       ? { label: t('fitness.routines.newShort'), open: () => update({ rutina: NEW }) }
       : tab === 'EXERCISES'
         ? { label: t('fitness.exercises.newShort'), open: () => update({ ejercicio: NEW }) }
@@ -83,13 +85,14 @@ export function FitnessPage() {
             type="button"
             className="tab"
             aria-current={tab === item.value ? 'page' : undefined}
-            onClick={() => update({ vista: item.value === 'PROGRESS' ? null : item.value })}
+            onClick={() => update({ vista: item.value === 'WORKOUTS' ? null : item.value })}
           >
             {t(item.label)}
           </button>
         ))}
       </nav>
 
+      {tab === 'WORKOUTS' && <WorkoutsView />}
       {tab === 'PROGRESS' && <ProgressView onAdd={() => update({ nuevo: '1' })} onOpen={(id) => update({ registro: id })} />}
       {tab === 'ROUTINES' && <RoutinesView onAdd={() => update({ rutina: NEW })} onOpen={(id) => update({ rutina: id })} />}
       {tab === 'EXERCISES' && <ExercisesView onOpen={(id) => update({ ejercicio: id })} />}

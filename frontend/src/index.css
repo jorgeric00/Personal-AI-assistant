@@ -2133,3 +2133,157 @@ a.button {
   align-items: end;
   gap: 10px;
 }
+
+/* Entreno: sesión de entrenamiento */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: -6px;
+}
+
+.back-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+.workout-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.badge-accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.badge-success {
+  color: var(--income);
+}
+
+.movement-meta .badge {
+  font-size: 0.75rem;
+}
+
+.previous {
+  color: var(--text-muted);
+}
+
+.set-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.set-table th,
+.set-table td {
+  padding: 4px 3px;
+  text-align: center;
+}
+
+.set-table thead th {
+  font-size: 0.75rem;
+  font-weight: 550;
+  color: var(--text-muted);
+}
+
+.set-table thead th:first-child,
+.set-table tbody th {
+  width: 40px;
+}
+
+.set-table thead th:nth-last-child(-n + 2) {
+  width: 44px;
+}
+
+.set-table input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.set-table input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.set-done input {
+  background: var(--accent-soft);
+}
+
+.set-check {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.set-check[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.set-check svg {
+  width: 20px;
+  height: 20px;
+}
+
+.week-bars {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+  align-items: end;
+}
+
+.week-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.week-bar-track {
+  width: 100%;
+  height: 56px;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 6px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.week-bar-fill {
+  width: 100%;
+  background: var(--accent);
+  opacity: 0.55;
+}
+
+.week-bar-met {
+  opacity: 1;
+}
+
+.week-bar-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.movement-row-static {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

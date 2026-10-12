@@ -39,6 +39,7 @@ class TrainingIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbc.update("delete from workout");
         jdbc.update("delete from routine");
         jdbc.update("delete from exercise");
         jdbc.update("delete from fitness_settings");

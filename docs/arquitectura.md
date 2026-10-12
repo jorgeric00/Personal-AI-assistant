@@ -82,6 +82,7 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | `fitness_settings` | Marca que el catálogo inicial de ejercicios ya se creó (para no recrear los que el usuario borre). |
 | `exercise` | Catálogo de ejercicios del usuario: nombre, grupo muscular, qué se anota (peso y repeticiones, repeticiones, tiempo, tiempo y distancia), material, cómo se hace, precauciones y archivado. Los iniciales se crean en el idioma del usuario. |
 | `routine` / `routine_exercise` | Rutinas con días de la semana opcionales y sus ejercicios en orden, con objetivo de series, repeticiones (rango), peso, tiempo, distancia, descanso e indicaciones. Un ejercicio usado en una rutina no se borra; se archiva. |
+| `workout` / `workout_exercise` / `workout_set` | Entrenamientos (en curso o terminados) con el objetivo copiado de la rutina al empezar y las series anotadas. Solo cuentan las series marcadas como hechas en entrenamientos terminados: de ahí salen el historial, la última vez de cada ejercicio, los récords y la constancia semanal. |
 | `finance_recurring` | Reglas de movimientos recurrentes: importe, categoría, cuenta, descripción, frecuencia, cada cuántos, inicio, fin y próxima fecha. Los movimientos generados guardan `recurring_id` y la fecha de su aparición. |
 
 ## Riesgos y temas abiertos

@@ -192,4 +192,31 @@ public final class NutritionDtos {
             @NotNull(message = "{nutrition.date.required}") LocalDate date,
             @NotNull(message = "{nutrition.meal.required}") Meal meal) {
     }
+
+    public record PlanRequest(
+            @NotNull(message = "{nutrition.date.required}") LocalDate date,
+            @NotNull(message = "{nutrition.meal.required}") Meal meal,
+            @Size(max = 120, message = "{nutrition.text.too-long}") String title,
+            UUID savedMealId,
+            @Size(max = 500, message = "{nutrition.text.too-long}") String notes,
+            LocalDate prepDate) {
+    }
+
+    public record PreparedRequest(@NotNull Boolean prepared) {
+    }
+
+    /** Copia los 7 días que empiezan en from a los 7 que empiezan en to. */
+    public record CopyWeekRequest(
+            @NotNull(message = "{nutrition.date.required}") LocalDate from,
+            @NotNull(message = "{nutrition.date.required}") LocalDate to) {
+    }
+
+    public record PlanResponse(UUID id, LocalDate date, Meal meal, String title, UUID savedMealId, String notes,
+            LocalDate prepDate, boolean prepared, boolean logged) {
+
+        static PlanResponse from(PlannedMeal p) {
+            return new PlanResponse(p.getId(), p.getDate(), p.getMeal(), p.getTitle(), p.getSavedMealId(),
+                    p.getNotes(), p.getPrepDate(), p.isPrepared(), p.getLoggedAt() != null);
+        }
+    }
 }

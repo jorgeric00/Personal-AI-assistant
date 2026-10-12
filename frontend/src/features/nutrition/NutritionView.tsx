@@ -10,18 +10,57 @@ import { ChevronLeftIcon, ChevronRightIcon } from '../../ui/icons'
 import { useToast } from '../../ui/toast-context'
 import { useNutritionDay, useNutritionSummary, useSetWater, type Entry, type Meal, type NutritionDay } from './api'
 import { FoodEditor } from './FoodEditor'
+import { MealPlanView } from './MealPlanView'
 import { MealSection } from './MealSection'
+import { PlannedForDay } from './PlannedForDay'
 import { SavedMealsSheet } from './SavedMealsSheet'
 import { TargetsForm } from './TargetsForm'
 
 const WATER_STEP = 250
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
+/** Alimentación: el diario de lo comido o el plan semanal (?comidas=plan). */
+export function NutritionView() {
+  const { t } = useTranslation()
+  const [params, setParams] = useSearchParams()
+  const planning = params.get('comidas') === 'plan'
+  const choose = (plan: boolean) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        if (plan) next.set('comidas', 'plan')
+        else next.delete('comidas')
+        return next
+      },
+      { replace: true },
+    )
+
+  return (
+    <div className="stack-lg">
+      <div className="segmented segmented-2" role="radiogroup" aria-label={t('nutrition.sectionsLabel')}>
+        {[false, true].map((plan) => (
+          <button
+            key={String(plan)}
+            type="button"
+            role="radio"
+            aria-checked={planning === plan}
+            className="segmented-option"
+            onClick={() => choose(plan)}
+          >
+            {plan ? t('nutrition.plan.tab') : t('nutrition.diaryTab')}
+          </button>
+        ))}
+      </div>
+      {planning ? <MealPlanView /> : <DiaryView />}
+    </div>
+  )
+}
+
 /**
  * Diario de alimentación de un día: lo comido en cada comida, agua, totales frente a los objetivos y resumen de la
  * semana. El día y el formulario abierto viven en la URL (?dia, ?alimento) para el acceso rápido de Hoy.
  */
-export function NutritionView() {
+function DiaryView() {
   const { t } = useTranslation()
   const { today, relativeDate } = useDateFormat()
   const [params, setParams] = useSearchParams()
@@ -90,6 +129,7 @@ export function NutritionView() {
         </div>
       ) : (
         <>
+          <PlannedForDay date={date} />
           <DayTotals day={day.data} />
           {day.data.meals.map((meal) => (
             <MealSection

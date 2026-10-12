@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router'
 
 import { PlusIcon } from '../../ui/icons'
 import { NutritionView } from '../nutrition/NutritionView'
+import { NEW_PLAN } from '../nutrition/plan'
 import { useExercises, useMeasurements, useRoutines } from './api'
 import { ExerciseEditor } from './ExerciseEditor'
 import { ExercisesView } from './ExercisesView'
@@ -66,11 +67,13 @@ export function FitnessPage() {
   const action =
     tab === 'ROUTINES' || tab === 'WORKOUTS'
       ? { label: t('fitness.routines.newShort'), open: () => update({ rutina: NEW }) }
-      : tab === 'FOOD'
-        ? { label: t('nutrition.quickAdd'), open: () => update({ alimento: 'nuevo' }) }
-        : tab === 'EXERCISES'
-          ? { label: t('fitness.exercises.newShort'), open: () => update({ ejercicio: NEW }) }
-          : { label: t('fitness.addEntry'), open: () => update({ nuevo: '1', registro: null }) }
+      : tab === 'FOOD' && params.get('comidas') === 'plan'
+        ? { label: t('nutrition.plan.newShort'), open: () => update({ plan: NEW_PLAN }) }
+        : tab === 'FOOD'
+          ? { label: t('nutrition.quickAdd'), open: () => update({ alimento: 'nuevo' }) }
+          : tab === 'EXERCISES'
+            ? { label: t('fitness.exercises.newShort'), open: () => update({ ejercicio: NEW }) }
+            : { label: t('fitness.addEntry'), open: () => update({ nuevo: '1', registro: null }) }
 
   return (
     <div className="page stack-lg">

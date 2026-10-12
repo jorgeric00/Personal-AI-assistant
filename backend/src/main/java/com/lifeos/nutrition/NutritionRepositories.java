@@ -37,3 +37,11 @@ interface SavedMealRepository extends JpaRepository<SavedMeal, UUID> {
             """)
     boolean existsByName(UUID userId, String name, UUID excludeId);
 }
+
+interface PlannedMealRepository extends JpaRepository<PlannedMeal, UUID> {
+
+    Optional<PlannedMeal> findByIdAndUserId(UUID id, UUID userId);
+
+    List<PlannedMeal> findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(UUID userId, LocalDate from,
+            LocalDate to);
+}

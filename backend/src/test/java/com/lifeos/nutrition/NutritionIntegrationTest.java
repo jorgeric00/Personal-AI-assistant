@@ -39,6 +39,7 @@ class NutritionIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbc.update("delete from planned_meal");
         jdbc.update("delete from food_entry");
         jdbc.update("delete from nutrition_day");
         jdbc.update("delete from nutrition_target");

@@ -70,7 +70,7 @@ describe('entreno', () => {
       'GET /api/auth/me': () => json(testUser),
       'GET /api/fitness/measurements': () => json(entries),
     })
-    renderApp('/entreno')
+    renderApp('/entreno?vista=PROGRESS')
     const user = userEvent.setup()
 
     const latest = (await screen.findByRole('heading', { name: 'Último registro' })).closest('section')!
@@ -112,7 +112,7 @@ describe('entreno', () => {
         return json(entries[0])
       },
     })
-    renderApp('/entreno?nuevo=1')
+    renderApp('/entreno?vista=PROGRESS&nuevo=1')
     const user = userEvent.setup()
 
     // Hoy no hay registro: se crea uno nuevo
@@ -153,7 +153,7 @@ describe('entreno', () => {
       'GET /api/auth/me': () => json(testUser),
       'GET /api/fitness/measurements': () => json([]),
     })
-    renderApp('/entreno')
+    renderApp('/entreno?vista=PROGRESS')
     const user = userEvent.setup()
 
     expect(await screen.findByText(/Aún no hay registros/)).toBeInTheDocument()
@@ -209,6 +209,6 @@ describe('entreno', () => {
   it('ofrece el acceso rápido desde Hoy', async () => {
     mockFetch({ 'GET /api/auth/me': () => json(testUser) })
     renderApp('/')
-    expect(await screen.findByRole('link', { name: 'Peso o medidas' })).toHaveAttribute('href', '/entreno?nuevo=1')
+    expect(await screen.findByRole('link', { name: 'Peso o medidas' })).toHaveAttribute('href', '/entreno?vista=PROGRESS&nuevo=1')
   })
 })

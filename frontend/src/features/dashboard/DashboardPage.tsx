@@ -8,6 +8,7 @@ import { useDateFormat } from '../../lib/useRelativeDate'
 import { PlusIcon } from '../../ui/icons'
 import { formatMoney } from '../../lib/money'
 import { useMonthSummary } from '../finance/api'
+import { TodayWorkout } from '../fitness/TodayWorkout'
 import { useNotes } from '../notes/api'
 import { NoteCard } from '../notes/NoteCard'
 import { useTasks } from '../tasks/api'
@@ -73,7 +74,7 @@ export function DashboardPage() {
             <PlusIcon />
             {t('finance.kind.EXPENSE')}
           </Link>
-          <Link to="/entreno?nuevo=1" className="quick-action">
+          <Link to="/entreno?vista=PROGRESS&nuevo=1" className="quick-action">
             <PlusIcon />
             {t('fitness.quickAdd')}
           </Link>
@@ -114,6 +115,8 @@ export function DashboardPage() {
           </>
         )}
       </section>
+
+      <TodayWorkout />
 
       <section className="stack-sm" aria-labelledby="reminders-title">
         <h2 id="reminders-title" className="h2">

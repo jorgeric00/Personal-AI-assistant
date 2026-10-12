@@ -96,6 +96,22 @@ export function ChevronRightIcon() {
   )
 }
 
+export function ChevronUpIcon() {
+  return (
+    <svg {...base}>
+      <path d="M6 15l6-6 6 6" />
+    </svg>
+  )
+}
+
+export function ChevronDownIcon() {
+  return (
+    <svg {...base}>
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  )
+}
+
 export function NotesIcon() {
   return (
     <svg {...base}>

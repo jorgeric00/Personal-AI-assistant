@@ -29,6 +29,8 @@ const defaultHandlers: Record<string, Handler> = {
   'GET /api/tasks?view=ALL': () => json([]),
   'GET /api/notes?view=ACTIVE&pinned=true': () => json([]),
   'GET /api/note-tags': () => json([]),
+  'GET /api/fitness/routines': () => json([]),
+  'GET /api/fitness/workouts': () => json([]),
 }
 
 /** Lecturas por defecto que dependen de un identificador. */

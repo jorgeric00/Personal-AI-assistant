@@ -27,6 +27,22 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | Fechas en UTC en la base de datos (`timestamptz`) y zona `Europe/Madrid` para mostrar | Evita errores con los cambios de hora. La zona del usuario viene de la configuración y se usa en el frontend. |
 | Errores con `application/problem+json` (RFC 9457) | Formato estándar; los mensajes están en español y los errores de validación se devuelven por campo. |
 | Internacionalización: español por defecto e inglés | En la app, i18next con los textos en `frontend/src/i18n/locales/` (el español es la referencia y TypeScript obliga a que el inglés tenga las mismas claves). En el servidor, `messages*.properties` según la cabecera `Accept-Language`, que la app envía siempre; una prueba comprueba que ambos ficheros tienen las mismas claves. El idioma elegido se guarda en la cuenta (`app_user.locale`) para usarlo también en lo que genera el servidor, como las notificaciones. Las fechas se formatean con `Intl` según el idioma. |
+| Una tarea recurrente es una sola fila | `due_date` guarda la próxima ocurrencia pendiente y las completadas se registran en `task_completion` (clave `task_id` + fecha, así no hay duplicados). Las fechas se calculan con la regla (frecuencia, intervalo, días de la semana, hasta) a partir de `recurrence_anchor`. Si se completa una ocurrencia atrasada, la siguiente salta a hoy o después en lugar de acumular atrasos. Evita generar filas por adelantado y permite editar la regla sin reescribir el historial. |
+| Tareas y recordatorios en la misma tabla (`kind`) | Comparten fecha, hora, repetición, categoría y aviso; los recordatorios no tienen fecha límite. |
+| Notificaciones Web Push propias, sin servicios de terceros | El servidor cifra los mensajes (RFC 8291, `aes128gcm`) y los firma con VAPID (RFC 8292) usando solo la criptografía del JDK, sin dependencias extra. Las claves VAPID se pueden pasar por variables de entorno; si no, se generan al arrancar y se guardan en `server_key`. El contenido viaja cifrado de extremo a extremo hasta el dispositivo. |
+| Envío de avisos con una tarea programada cada minuto | `ReminderNotifier` busca las ocurrencias cuyo aviso ya toca. Antes de enviar, inserta en `task_notification` (clave tarea + fecha), así cada ocurrencia se avisa una sola vez aunque haya varios procesos; si ningún dispositivo lo recibe, libera la marca para reintentar. Los avisos con más de 2 horas de retraso (por ejemplo, tras tener el servidor apagado) se descartan para no enviar ráfagas antiguas. Las suscripciones que el servicio push da por caducadas (404/410) se borran. |
+| Notas con guardado automático | El editor guarda mientras se escribe (con una pausa de 0,7 s), al cerrar y al pasar la app a segundo plano. Los guardados van de uno en uno para no crear la misma nota dos veces, y una nota nueva no se crea hasta que tiene título o contenido. |
+| Búsqueda de notas sin extensiones de PostgreSQL | Cada nota guarda una columna `search_text` con título, contenido y etiquetas en minúsculas y sin tildes; la búsqueda exige que aparezcan todas las palabras. Es suficiente para el volumen de una persona y no depende de `unaccent` ni de permisos de superusuario. |
+| Papelera con borrado a los 30 días | Las notas de la papelera solo se pueden restaurar o borrar. Una tarea programada borra cada 6 horas las que llevan más de 30 días. |
+| Relaciones de notas en tablas propias (`note_task`) | Por ahora una nota se puede relacionar con tareas. Cuando existan objetivos, actividades o planificaciones se añadirá una tabla equivalente para cada uno, con claves foráneas reales. |
+| Importes en céntimos (`BIGINT`) | Se guardan, se suman y viajan por la API como enteros, siempre positivos con el tipo (ingreso o gasto) como signo. La app formatea con `Intl` sin pasar por números con decimales y lee lo que escribe el usuario («12,50», «1.234,56») como texto. |
+| Moneda por usuario y por movimiento | EUR por defecto en `finance_settings`; cada movimiento guarda su moneda para poder permitir otras en el futuro. Mientras no haya conversión, los resúmenes asumen una sola moneda. |
+| Categorías iniciales al usar el módulo por primera vez | Se crean en el idioma de la cuenta y son editables. Una categoría con movimientos no se borra, se archiva: deja de ofrecerse para movimientos nuevos y se conserva en el historial. La creación es idempotente (`insert … on conflict do nothing`). |
+| Resúmenes calculados en la base de datos | Totales por mes, por categoría y ahorro acumulado (ingresos menos gastos desde el primer movimiento) con `sum` sobre enteros. Los gráficos son SVG propios, sin librerías, con una tabla oculta para lectores de pantalla. |
+| Presupuestos mensuales por categoría de gasto | Un límite por categoría que se aplica a cada mes. Al guardar, cambiar o borrar un movimiento del mes actual se recalcula lo gastado y, al pasar del 80 % o del 100 %, se envía una notificación push. `finance_budget_alert` (presupuesto + mes + nivel) garantiza un solo aviso por nivel y mes. El cálculo va después de confirmar la transacción para no retrasar ni romper el guardado. |
+| Movimientos recurrentes que generan movimientos reales | Una regla (semanal, mensual o anual, cada 1–12, con fecha de fin opcional) crea un movimiento normal en cada fecha: al crearla se generan las fechas ya pasadas (hasta 5 años), una tarea programada cada hora genera las nuevas y también se generan al consultar movimientos o resúmenes. El índice único `(recurring_id, occurrence_date)` y un bloqueo de la regla impiden duplicados. Los meses cortos usan el último día (el 31 pasa a 30 o 28). Detener o borrar una regla conserva los movimientos ya generados, que se pueden editar uno a uno. |
+| Exportación e importación CSV | El mismo formato en los dos sentidos (`date,type,amount,currency,category,account,description,tags`, UTF-8 con BOM para Excel). La importación acepta también `;`, cabeceras en español, «ingreso/gasto» y coma decimal; es todo o nada (si una línea falla no se guarda ninguna y se indica la línea), crea las categorías y cuentas que falten y no duplica movimientos idénticos ya existentes, así se puede reimportar una copia sin riesgo. Las celdas que empiezan por `=`, `+`, `-` o `@` se exportan escapadas para que una hoja de cálculo no las ejecute como fórmulas. |
+| Preparado para importar del banco más adelante | Las cuentas son una entidad propia y los movimientos no dependen de ningún proveedor; no se piden credenciales bancarias. Los extractos se pueden traer en CSV. |
 | Migraciones con Flyway, `ddl-auto: validate` | El esquema solo cambia con migraciones versionadas. |
 | Pruebas de integración con Testcontainers | Se prueba contra PostgreSQL real, no contra una base de datos en memoria. |
 
@@ -43,14 +59,33 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | --- | --- |
 | `app_user` | Cuenta: correo (único, sin distinguir mayúsculas), nombre visible, hash de la contraseña, idioma, fechas. |
 | `spring_session`, `spring_session_attributes` | Sesiones activas. |
+| `task_category` | Categorías de tareas del usuario: nombre (único sin distinguir mayúsculas) y color. |
+| `task` | Tareas y recordatorios: tipo, título, descripción, fecha y hora, fecha límite, prioridad, estado (pendiente, aplazada, hecha), regla de repetición y minutos de antelación del aviso. |
+| `task_completion` | Ocurrencias completadas de cada tarea, con la fecha de la ocurrencia y cuándo se completó. |
+| `push_subscription` | Dispositivos con notificaciones activadas: endpoint del servicio push y claves públicas del navegador. |
+| `task_notification` | Avisos ya enviados por tarea y ocurrencia, para no repetirlos. |
+| `server_key` | Claves generadas por el servidor (VAPID). |
+| `note` | Notas: título, contenido, estado (activa, archivada, en la papelera), fijada, favorita, texto de búsqueda y fechas. |
+| `note_tag` | Etiquetas de cada nota, en minúsculas. |
+| `note_task` | Tareas relacionadas con cada nota. |
+| `finance_settings` | Moneda del usuario (EUR por defecto). |
+| `finance_category` | Categorías de ingresos y de gastos: nombre, color y si está archivada. |
+| `finance_account` | Cuentas o métodos de pago (opcionales en cada movimiento). |
+| `finance_movement` | Movimientos: tipo, importe en céntimos, moneda, fecha, categoría, cuenta, descripción, texto de búsqueda y, si lo generó una regla, la regla y la fecha de su aparición. |
+| `finance_movement_tag` | Etiquetas de cada movimiento. |
+| `finance_budget` | Límite mensual en céntimos por categoría de gasto (uno por categoría). |
+| `finance_budget_alert` | Avisos de presupuesto ya enviados por mes y nivel (80 % o superado). |
+| `finance_recurring` | Reglas de movimientos recurrentes: importe, categoría, cuenta, descripción, frecuencia, cada cuántos, inicio, fin y próxima fecha. Los movimientos generados guardan `recurring_id` y la fecha de su aparición. |
 
 ## Riesgos y temas abiertos
 
 - **Despliegue.** Para usarla fuera de casa el servidor tiene que ser accesible desde el móvil y servirse por
   HTTPS (necesario para instalar la PWA, para las notificaciones y para la cookie `Secure`).
   Opciones: un VPS pequeño con Caddy, o un equipo en casa con Tailscale. Pendiente de decidir.
-- **Notificaciones en iOS.** Solo funcionan con la app añadida a la pantalla de inicio y requieren claves VAPID
-  y un proceso en el servidor que envíe los avisos. Se implementa en la fase 2.
+- **Notificaciones en iOS.** Solo funcionan con la app añadida a la pantalla de inicio (iOS 16.4 o posterior);
+  la pantalla de Ajustes lo explica cuando detecta un iPhone sin instalar. Los avisos se envían por los
+  servicios push de Apple, Google o Mozilla, que solo ven el mensaje cifrado.
+- **Precisión de los avisos.** Se comprueban cada minuto, así que pueden llegar hasta un minuto tarde.
 - **Sin conexión.** Por ahora la app necesita conexión para ver y guardar datos. Un modo sin conexión con
   sincronización añadiría mucha complejidad; se valorará cuando haya módulos en uso.
 - **Copias de seguridad.** Los datos viven en un volumen de Docker. Antes de usarla de verdad hay que

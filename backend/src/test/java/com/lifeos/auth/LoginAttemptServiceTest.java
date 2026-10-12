@@ -18,7 +18,9 @@ class LoginAttemptServiceTest {
     private final MutableClock clock = new MutableClock(Instant.parse("2026-01-01T10:00:00Z"));
     private final LoginAttemptService service = new LoginAttemptService(
             new LifeosProperties(ZoneId.of("Europe/Madrid"), new LifeosProperties.Admin(null, null, null),
-                    new LifeosProperties.Login(3, Duration.ofMinutes(15))),
+                    new LifeosProperties.Login(3, Duration.ofMinutes(15)),
+                    new LifeosProperties.Push("mailto:test@example.com", null, null),
+                    new LifeosProperties.Reminders(false, Duration.ofSeconds(30))),
             clock);
 
     @Test

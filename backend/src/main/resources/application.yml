@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
   application:
     name: lifeos
   datasource:
@@ -60,3 +64,10 @@ lifeos:
   login:
     max-failed-attempts: 5
     lockout: 15m
+  push:
+    subject: ${LIFEOS_PUSH_SUBJECT:mailto:lifeos@localhost}
+    vapid-public-key: ${LIFEOS_VAPID_PUBLIC_KEY:}
+    vapid-private-key: ${LIFEOS_VAPID_PRIVATE_KEY:}
+  reminders:
+    enabled: true
+    check-interval: 30s

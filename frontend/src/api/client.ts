@@ -65,7 +65,9 @@ export interface RequestOptions {
 export async function apiFetch<T>(path: string, { method = 'GET', body }: RequestOptions = {}): Promise<T> {
   // El servidor responde los errores en el idioma de la interfaz.
   const headers: Record<string, string> = { Accept: 'application/json', 'Accept-Language': currentLanguage() }
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  // Con FormData el navegador pone el Content-Type multipart con su boundary.
+  const isForm = body instanceof FormData
+  if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
 
   const send = async () => {
     if (!SAFE_METHODS.has(method)) headers[CSRF_HEADER] = await ensureCsrfToken()
@@ -73,7 +75,7 @@ export async function apiFetch<T>(path: string, { method = 'GET', body }: Reques
       method,
       headers,
       credentials: 'same-origin',
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
     })
   }
 

@@ -4,7 +4,7 @@ import { NavLink, Outlet } from 'react-router'
 
 import type { ParseKeys } from 'i18next'
 
-import { SettingsIcon, TodayIcon } from './icons'
+import { FinanceIcon, NotesIcon, SettingsIcon, TasksIcon, TodayIcon } from '../ui/icons'
 
 interface NavItem {
   to: string
@@ -16,6 +16,9 @@ interface NavItem {
 // Cada módulo nuevo añade aquí su entrada cuando esté disponible.
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'nav.today', icon: <TodayIcon />, end: true },
+  { to: '/tareas', label: 'nav.tasks', icon: <TasksIcon /> },
+  { to: '/notas', label: 'nav.notes', icon: <NotesIcon /> },
+  { to: '/finanzas', label: 'nav.finance', icon: <FinanceIcon /> },
   { to: '/ajustes', label: 'nav.settings', icon: <SettingsIcon /> },
 ]
 

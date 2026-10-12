@@ -2898,3 +2898,52 @@ a.icon-button {
 .archived-habits summary {
   cursor: pointer;
 }
+
+/* Objetivos */
+.goal-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.goal-title .food-name {
+  overflow-wrap: anywhere;
+}
+
+.goal-bar {
+  display: block;
+}
+
+.goal-reached {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.goal-done {
+  align-self: flex-start;
+}
+
+.warning-text {
+  color: var(--warning);
+}
+
+.goal-group > summary {
+  cursor: pointer;
+}
+
+.goal-group > ul {
+  margin-top: 12px;
+}
+
+.goal-group .goal-card {
+  box-shadow: none;
+  border: 1px solid var(--border);
+}

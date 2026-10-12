@@ -38,7 +38,8 @@ public class GoalController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public GoalResponse create(@AuthenticationPrincipal AppUserPrincipal user, @Valid @RequestBody GoalRequest request) {
+    public GoalResponse create(@AuthenticationPrincipal AppUserPrincipal user,
+            @Valid @RequestBody GoalRequest request) {
         return service.create(user.id(), request);
     }
 

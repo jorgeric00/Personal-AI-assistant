@@ -49,6 +49,16 @@ export function HabitsIcon() {
   )
 }
 
+export function GoalsIcon() {
+  return (
+    <svg {...base}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="0.5" />
+    </svg>
+  )
+}
+
 export function TasksIcon() {
   return (
     <svg {...base}>

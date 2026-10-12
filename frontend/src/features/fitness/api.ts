@@ -74,8 +74,12 @@ export function useProfile() {
 }
 
 /** Registros de evolución, del más reciente al más antiguo. */
-export function useMeasurements() {
-  return useQuery({ queryKey: keys.measurements, queryFn: () => apiFetch<Measurement[]>('/api/fitness/measurements') })
+export function useMeasurements(enabled = true) {
+  return useQuery({
+    queryKey: keys.measurements,
+    queryFn: () => apiFetch<Measurement[]>('/api/fitness/measurements'),
+    enabled,
+  })
 }
 
 /** El peso actual del perfil depende de los registros, así que cualquier cambio invalida todo el módulo. */
@@ -291,8 +295,12 @@ export function useWorkout(id: string) {
   return useQuery({ queryKey: workoutKeys.detail(id), queryFn: () => apiFetch<Workout>(`/api/fitness/workouts/${id}`) })
 }
 
-export function useRecords() {
-  return useQuery({ queryKey: workoutKeys.records, queryFn: () => apiFetch<ExerciseRecord[]>('/api/fitness/records') })
+export function useRecords(enabled = true) {
+  return useQuery({
+    queryKey: workoutKeys.records,
+    queryFn: () => apiFetch<ExerciseRecord[]>('/api/fitness/records'),
+    enabled,
+  })
 }
 
 export function useStartWorkout() {

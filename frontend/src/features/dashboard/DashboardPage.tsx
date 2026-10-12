@@ -7,6 +7,7 @@ import { formatLongDate, greetingKey, todayIso } from '../../lib/date'
 import { useDateFormat } from '../../lib/useRelativeDate'
 import { PlusIcon } from '../../ui/icons'
 import { formatMoney } from '../../lib/money'
+import { TodayAgenda } from '../agenda/TodayAgenda'
 import { useMonthSummary } from '../finance/api'
 import { TodayWorkout } from '../fitness/TodayWorkout'
 import { useNotes } from '../notes/api'
@@ -66,6 +67,10 @@ export function DashboardPage() {
             <PlusIcon />
             {t('tasks.kind.REMINDER')}
           </Link>
+          <Link to="/agenda?actividad=nueva" className="quick-action">
+            <PlusIcon />
+            {t('agenda.newShort')}
+          </Link>
           <Link to="/notas?nueva=1" className="quick-action">
             <PlusIcon />
             {t('notes.kind')}
@@ -115,6 +120,8 @@ export function DashboardPage() {
           </>
         )}
       </section>
+
+      <TodayAgenda />
 
       <TodayWorkout />
 

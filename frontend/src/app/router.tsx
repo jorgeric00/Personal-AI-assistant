@@ -2,6 +2,7 @@ import { Navigate, type RouteObject } from 'react-router'
 
 import { LoginPage } from '../auth/LoginPage'
 import { RequireAuth } from '../auth/RequireAuth'
+import { AgendaPage } from '../features/agenda/AgendaPage'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { FinancePage } from '../features/finance/FinancePage'
 import { FitnessPage } from '../features/fitness/FitnessPage'
@@ -20,6 +21,7 @@ export const routes: RouteObject[] = [
         element: <AppLayout />,
         children: [
           { index: true, element: <DashboardPage /> },
+          { path: 'agenda', element: <AgendaPage /> },
           { path: 'tareas', element: <TasksPage /> },
           { path: 'finanzas', element: <FinancePage /> },
           { path: 'notas', element: <NotesPage /> },

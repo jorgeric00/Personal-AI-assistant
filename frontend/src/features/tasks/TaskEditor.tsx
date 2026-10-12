@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError } from '../../api/client'
-import { addDays, weekdayNames } from '../../lib/date'
+import { addDays } from '../../lib/date'
 import { useDateFormat } from '../../lib/useRelativeDate'
 import { Field } from '../../ui/Field'
 import { Sheet } from '../../ui/Sheet'
@@ -12,22 +12,19 @@ import { usePushState } from '../notifications/push'
 import {
   CATEGORY_COLORS,
   PRIORITIES,
-  WEEKDAYS,
   useCategories,
   useCreateCategory,
   useDeleteTask,
   usePostponeTask,
   useSaveTask,
-  type Frequency,
   type Task,
   type TaskInput,
   type TaskKind,
-  type Weekday,
 } from './api'
+import { recurrenceFromFields, recurrenceToFields, type RecurrenceFieldValues } from './recurrence'
+import { RecurrenceFields } from './RecurrenceFields'
 
-type RepeatChoice = 'none' | Frequency | 'custom'
-
-interface FormState {
+interface FormState extends RecurrenceFieldValues {
   kind: TaskKind
   title: string
   description: string
@@ -36,11 +33,6 @@ interface FormState {
   deadline: string
   priority: TaskInput['priority']
   categoryId: string
-  repeat: RepeatChoice
-  interval: string
-  frequency: Frequency
-  weekdays: Weekday[]
-  until: string
   notify: string
 }
 
@@ -48,9 +40,6 @@ interface FormState {
 const NOTIFY_OPTIONS = [0, 5, 15, 30, 60, 120, 1440]
 
 function initialState(task: Task | null, kind: TaskKind, today: string): FormState {
-  const recurrence = task?.recurrence
-  const isCustom =
-    recurrence && (recurrence.interval !== 1 || (recurrence.weekdays?.length ?? 0) > 0 || recurrence.until)
   return {
     kind: task?.kind ?? kind,
     title: task?.title ?? '',
@@ -60,27 +49,13 @@ function initialState(task: Task | null, kind: TaskKind, today: string): FormSta
     deadline: task?.deadline ?? '',
     priority: task?.priority ?? 'MEDIUM',
     categoryId: task?.category?.id ?? '',
-    repeat: !recurrence ? 'none' : isCustom ? 'custom' : recurrence.frequency,
-    interval: String(recurrence?.interval ?? 1),
-    frequency: recurrence?.frequency ?? 'WEEKLY',
-    weekdays: recurrence?.weekdays ?? [],
-    until: recurrence?.until ?? '',
+    ...recurrenceToFields(task?.recurrence),
     notify: task?.reminderMinutesBefore != null ? String(task.reminderMinutesBefore) : kind === 'REMINDER' ? '0' : '',
   }
 }
 
 function toInput(form: FormState): TaskInput {
-  const recurrence =
-    form.repeat === 'none'
-      ? null
-      : form.repeat === 'custom'
-        ? {
-            frequency: form.frequency,
-            interval: Math.min(365, Math.max(1, Math.trunc(Number(form.interval)) || 1)),
-            weekdays: form.frequency === 'WEEKLY' && form.weekdays.length > 0 ? form.weekdays : null,
-            until: form.until || null,
-          }
-        : { frequency: form.repeat, interval: 1, weekdays: null, until: null }
+  const recurrence = recurrenceFromFields(form)
   return {
     kind: form.kind,
     title: form.title.trim(),
@@ -104,7 +79,7 @@ interface TaskEditorProps {
 export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorProps) {
   const { t } = useTranslation()
   const toast = useToast()
-  const { today, locale, relativeDate } = useDateFormat()
+  const { today, relativeDate } = useDateFormat()
   const [form, setForm] = useState(() => initialState(task, initialKind, today))
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [newCategory, setNewCategory] = useState<{ name: string; color: string } | null>(null)
@@ -174,10 +149,6 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
     )
   }
 
-  const toggleWeekday = (day: Weekday) =>
-    set('weekdays', form.weekdays.includes(day) ? form.weekdays.filter((d) => d !== day) : [...form.weekdays, day])
-
-  const dayNames = weekdayNames(locale)
   const categoryError =
     createCategory.error instanceof ApiError
       ? (createCategory.error.fieldErrors.name ?? createCategory.error.message)
@@ -269,75 +240,12 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
           <p className="hint">{t('tasks.form.notificationsOff')}</p>
         )}
 
-        <Field label={t('tasks.form.repeat')} id="task-repeat" error={recurrenceError}>
-          <select
-            id="task-repeat"
-            value={form.repeat}
-            onChange={(e) => set('repeat', e.target.value as RepeatChoice)}
-          >
-            <option value="none">{t('tasks.repeat.none')}</option>
-            <option value="DAILY">{t('tasks.repeat.DAILY')}</option>
-            <option value="WEEKLY">{t('tasks.repeat.WEEKLY')}</option>
-            <option value="MONTHLY">{t('tasks.repeat.MONTHLY')}</option>
-            <option value="custom">{t('tasks.repeat.custom')}</option>
-          </select>
-        </Field>
-
-        {form.repeat === 'custom' && (
-          <fieldset className="subform stack">
-            <legend className="visually-hidden">{t('tasks.repeat.custom')}</legend>
-            <div className="field-row">
-              <Field label={t('tasks.repeat.every')} id="task-interval">
-                <input
-                  id="task-interval"
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={365}
-                  value={form.interval}
-                  onChange={(e) => set('interval', e.target.value)}
-                />
-              </Field>
-              <Field label={' '} id="task-frequency">
-                <select
-                  id="task-frequency"
-                  aria-label={t('tasks.form.repeat')}
-                  value={form.frequency}
-                  onChange={(e) => set('frequency', e.target.value as Frequency)}
-                >
-                  {(['DAILY', 'WEEKLY', 'MONTHLY'] as Frequency[]).map((f) => (
-                    <option key={f} value={f}>
-                      {t(`tasks.repeat.unit.${f}`, { count: Number(form.interval) || 1 })}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-            {form.frequency === 'WEEKLY' && (
-              <div className="field">
-                <span className="field-label" id="weekdays-label">
-                  {t('tasks.repeat.weekdays')}
-                </span>
-                <div className="chips" role="group" aria-labelledby="weekdays-label">
-                  {WEEKDAYS.map((day, index) => (
-                    <button
-                      key={day}
-                      type="button"
-                      className="chip"
-                      aria-pressed={form.weekdays.includes(day)}
-                      onClick={() => toggleWeekday(day)}
-                    >
-                      {dayNames[index]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            <Field label={t('tasks.repeat.until')} id="task-until">
-              <input id="task-until" type="date" value={form.until} onChange={(e) => set('until', e.target.value)} />
-            </Field>
-          </fieldset>
-        )}
+        <RecurrenceFields
+          idPrefix="task"
+          value={form}
+          onChange={(changes) => setForm((f) => ({ ...f, ...changes }))}
+          error={recurrenceError}
+        />
 
         <div className="field">
           <span className="field-label" id="priority-label">

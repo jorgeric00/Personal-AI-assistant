@@ -12,6 +12,15 @@ const base: SVGProps<SVGSVGElement> = {
   'aria-hidden': true,
 }
 
+export function AgendaIcon() {
+  return (
+    <svg {...base}>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4M7 14h3M7 17h6" />
+    </svg>
+  )
+}
+
 export function TodayIcon() {
   return (
     <svg {...base}>

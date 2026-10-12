@@ -5,11 +5,12 @@ import { Link, useNavigate } from 'react-router'
 import { useCurrentUser } from '../../auth/auth'
 import { formatLongDate, greetingKey, todayIso } from '../../lib/date'
 import { useDateFormat } from '../../lib/useRelativeDate'
-import { PlusIcon } from '../../ui/icons'
+import { PlusIcon, SettingsIcon } from '../../ui/icons'
 import { formatMoney } from '../../lib/money'
 import { TodayAgenda } from '../agenda/TodayAgenda'
 import { useMonthSummary } from '../finance/api'
 import { TodayWorkout } from '../fitness/TodayWorkout'
+import { TodayHabits } from '../habits/TodayHabits'
 import { useNotes } from '../notes/api'
 import { NoteCard } from '../notes/NoteCard'
 import { useTasks } from '../tasks/api'
@@ -49,9 +50,15 @@ export function DashboardPage() {
 
   return (
     <div className="page stack-lg">
-      <header className="page-header">
-        <p className="eyebrow">{formatLongDate(now, locale, timeZone)}</p>
-        <h1 className="h1">{user ? t('greeting.withName', { greeting, name: user.displayName }) : greeting}</h1>
+      <header className="page-header page-header-row">
+        <div>
+          <p className="eyebrow">{formatLongDate(now, locale, timeZone)}</p>
+          <h1 className="h1">{user ? t('greeting.withName', { greeting, name: user.displayName }) : greeting}</h1>
+        </div>
+        {/* En el móvil Ajustes no cabe en la barra inferior */}
+        <Link to="/ajustes" className="icon-button mobile-only" aria-label={t('nav.settings')}>
+          <SettingsIcon />
+        </Link>
       </header>
 
       <section aria-labelledby="quick-title" className="stack-sm">
@@ -128,6 +135,8 @@ export function DashboardPage() {
       <TodayAgenda />
 
       <TodayWorkout />
+
+      <TodayHabits />
 
       <section className="stack-sm" aria-labelledby="reminders-title">
         <h2 id="reminders-title" className="h2">

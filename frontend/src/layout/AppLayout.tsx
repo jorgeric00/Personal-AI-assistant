@@ -4,13 +4,15 @@ import { NavLink, Outlet } from 'react-router'
 
 import type { ParseKeys } from 'i18next'
 
-import { AgendaIcon, FinanceIcon, FitnessIcon, NotesIcon, SettingsIcon, TasksIcon, TodayIcon } from '../ui/icons'
+import { AgendaIcon, FinanceIcon, FitnessIcon, HabitsIcon, NotesIcon, SettingsIcon, TasksIcon, TodayIcon } from '../ui/icons'
 
 interface NavItem {
   to: string
   label: ParseKeys
   icon: ReactNode
   end?: boolean
+  /** En el móvil no cabe en la barra inferior; se llega desde la cabecera de Hoy. */
+  desktopOnly?: boolean
 }
 
 // Cada módulo nuevo añade aquí su entrada cuando esté disponible.
@@ -21,7 +23,8 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/notas', label: 'nav.notes', icon: <NotesIcon /> },
   { to: '/finanzas', label: 'nav.finance', icon: <FinanceIcon /> },
   { to: '/entreno', label: 'nav.fitness', icon: <FitnessIcon /> },
-  { to: '/ajustes', label: 'nav.settings', icon: <SettingsIcon /> },
+  { to: '/habitos', label: 'nav.habits', icon: <HabitsIcon /> },
+  { to: '/ajustes', label: 'nav.settings', icon: <SettingsIcon />, desktopOnly: true },
 ]
 
 export function AppLayout() {
@@ -38,7 +41,7 @@ export function AppLayout() {
         </div>
         <ul>
           {NAV_ITEMS.map((item) => (
-            <li key={item.to}>
+            <li key={item.to} className={item.desktopOnly ? 'desktop-only' : undefined}>
               <NavLink to={item.to} end={item.end} className="app-nav-link">
                 {item.icon}
                 <span>{t(item.label)}</span>

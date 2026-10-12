@@ -40,6 +40,15 @@ export function SettingsIcon() {
   )
 }
 
+export function HabitsIcon() {
+  return (
+    <svg {...base}>
+      <path d="M20 12a8 8 0 1 1-2.3-5.6" />
+      <path d="M20 4v4h-4M8.5 12l2.5 2.5 4.5-5" />
+    </svg>
+  )
+}
+
 export function TasksIcon() {
   return (
     <svg {...base}>

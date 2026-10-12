@@ -64,6 +64,8 @@ interface RoutineRepository extends JpaRepository<Routine, UUID> {
 
     Optional<Routine> findByIdAndUserId(UUID id, UUID userId);
 
+    List<Routine> findByUserIdAndWeekdaysNotNull(UUID userId);
+
     @Query("""
             select count(r) > 0 from Routine r
             where r.userId = :userId and lower(r.name) = lower(:name) and r.id <> :excludeId
@@ -74,6 +76,8 @@ interface RoutineRepository extends JpaRepository<Routine, UUID> {
 interface WorkoutRepository extends JpaRepository<Workout, UUID> {
 
     Optional<Workout> findByIdAndUserId(UUID id, UUID userId);
+
+    List<Workout> findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(UUID userId, LocalDate from, LocalDate to);
 
     @Query("""
             select new com.lifeos.fitness.WorkoutDtos$WorkoutSummary(w.id, w.routineId, w.name, w.date, w.finishedAt,

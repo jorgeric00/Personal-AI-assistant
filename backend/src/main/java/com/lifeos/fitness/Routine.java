@@ -97,4 +97,8 @@ public class Routine {
     public List<RoutineExercise> getExercises() {
         return exercises;
     }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }

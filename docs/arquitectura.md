@@ -48,6 +48,9 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | Agenda: actividades repetidas como una sola fila | La regla de repetición de tareas se reutiliza, anclada en la fecha de inicio; cada aparición dura lo mismo que la primera. El estado de cada aparición (confirmada, hecha, no hecha, cancelada) se guarda en `activity_occurrence` por fecha; sin fila, está planificada. Editar una actividad repetida cambia toda la serie y conserva los estados ya marcados. Una aparición dura como mucho 60 días y se piden como mucho 62 días de agenda a la vez. |
 | Entrenos en la agenda sin duplicados | La agenda no copia los entrenamientos: los lee del módulo de entreno al consultarla. Un entrenamiento registrado aparece una vez; los días que toca una rutina aparecen solo si ese día no hay ya un entrenamiento de esa rutina, y solo desde que se creó la rutina. Si el día pasa sin entrenamiento, se muestra como «sin entreno registrado». |
 | Solapamientos como aviso, no como error | La app detecta en el navegador las actividades con hora que se pisan (sin contar canceladas ni no hechas) y las marca en las vistas. Al guardar, si la primera aparición coincide con otras, avisa y permite «Guardar igualmente». Las actividades de todo el día no cuentan como solapamiento ni suman horas. |
+| Alimentación sin valores inventados | Un alimento puede guardarse solo con el nombre: cantidad, calorías y macros son opcionales y la app no los rellena ni los estima por su cuenta. Si el usuario indica que lo que ha escrito es aproximado, se guarda `estimated` y los totales marcan con «≈» solo los nutrientes a los que contribuye algún valor estimado. Los totales suman únicamente lo anotado. |
+| Objetivos de alimentación opcionales y puestos por el usuario | Calorías, macros y agua son opcionales; la app no los calcula. Si se ponen menos de 1200 kcal se muestra un aviso, y el formulario recuerda que no sustituye a un profesional de la salud o de la nutrición. |
+| Diario solo de lo ya comido | No se admiten días futuros en el diario (lo planificado irá en la planificación semanal). Una comida habitual es una plantilla: al registrarla se copian sus alimentos al día y después se editan sueltos. El resumen semanal hace medias solo con los días que tienen algo registrado. |
 | Migraciones con Flyway, `ddl-auto: validate` | El esquema solo cambia con migraciones versionadas. |
 | Pruebas de integración con Testcontainers | Se prueba contra PostgreSQL real, no contra una base de datos en memoria. |
 
@@ -88,6 +91,10 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | `workout` / `workout_exercise` / `workout_set` | Entrenamientos (en curso o terminados) con el objetivo copiado de la rutina al empezar y las series anotadas. Solo cuentan las series marcadas como hechas en entrenamientos terminados: de ahí salen el historial, la última vez de cada ejercicio, los récords y la constancia semanal. |
 | `agenda_settings` / `activity_category` | Categorías de actividades (iniciales en el idioma del usuario, editables y archivables; una categoría con actividades no se borra). |
 | `activity` / `activity_occurrence` | Actividades: título, categoría, inicio y fin (fecha y hora locales; sin horas = todo el día), descripción, ubicación y repetición; y el estado guardado de cada aparición. |
+| `nutrition_target` | Objetivos diarios opcionales: calorías, proteínas, hidratos, grasas y agua. |
+| `nutrition_day` | Por día: agua bebida y una nota por comida (desayuno, comida, cena, picoteo). |
+| `food_entry` | Alimentos anotados: fecha, comida, nombre, cantidad y unidad, calorías y macros (todo opcional) y si los valores son estimados. |
+| `saved_meal` / `saved_meal_item` | Comidas habituales con sus alimentos, para registrarlas de una vez. |
 | `finance_recurring` | Reglas de movimientos recurrentes: importe, categoría, cuenta, descripción, frecuencia, cada cuántos, inicio, fin y próxima fecha. Los movimientos generados guardan `recurring_id` y la fecha de su aparición. |
 
 ## Riesgos y temas abiertos

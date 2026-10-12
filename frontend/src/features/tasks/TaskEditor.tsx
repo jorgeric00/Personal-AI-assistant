@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -410,7 +411,7 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
   )
 }
 
-function notifyLabel(minutes: number, t: ReturnType<typeof useTranslation>['t']) {
+function notifyLabel(minutes: number, t: TFunction) {
   if (minutes === 0) return t('tasks.notify.atTime')
   if (minutes % 1440 === 0) return t('tasks.notify.days', { count: minutes / 1440 })
   if (minutes % 60 === 0) return t('tasks.notify.hours', { count: minutes / 60 })

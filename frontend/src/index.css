@@ -378,7 +378,8 @@ input {
 
 /* Las celdas de una rejilla no deben crecer por el ancho intrínseco de un campo. */
 .field-row > *,
-.metric-grid > * {
+.metric-grid > *,
+.target-grid > * {
   min-width: 0;
 }
 
@@ -2041,4 +2042,94 @@ a.button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Entreno: ejercicios y rutinas */
+.movement-title .badge {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  vertical-align: 1px;
+}
+
+.checkbox-help {
+  display: block;
+}
+
+.routine-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.routine-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.routine-name {
+  font-size: 1.0625rem;
+  font-weight: 650;
+}
+
+.routine-items {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.routine-items li {
+  display: flex;
+  flex-direction: column;
+}
+
+.routine-item-name {
+  font-weight: 550;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.routine-exercises {
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+
+.routine-item-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.routine-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.routine-item-actions {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.target-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: end;
+  gap: 10px;
 }

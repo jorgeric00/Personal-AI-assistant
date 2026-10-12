@@ -4,31 +4,46 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 
 import { PlusIcon } from '../../ui/icons'
-import { useMeasurements } from './api'
+import { useExercises, useMeasurements, useRoutines } from './api'
+import { ExerciseEditor } from './ExerciseEditor'
+import { ExercisesView } from './ExercisesView'
 import { MeasurementEditor } from './MeasurementEditor'
 import { ProfileView } from './ProfileView'
 import { ProgressView } from './ProgressView'
+import { RoutineEditor } from './RoutineEditor'
+import { RoutinesView } from './RoutinesView'
 
-type Tab = 'PROGRESS' | 'PROFILE'
+type Tab = 'PROGRESS' | 'ROUTINES' | 'EXERCISES' | 'PROFILE'
 
 const TABS: { value: Tab; label: ParseKeys }[] = [
   { value: 'PROGRESS', label: 'fitness.views.progress' },
+  { value: 'ROUTINES', label: 'fitness.views.routines' },
+  { value: 'EXERCISES', label: 'fitness.views.exercises' },
   { value: 'PROFILE', label: 'fitness.views.profile' },
 ]
 
+const NEW = 'nuevo'
+
 /**
- * Entrenador personal. El estado vive en la URL (?vista, ?registro, ?nuevo) para que el acceso rápido de Hoy
- * abra directamente el formulario.
+ * Entrenador personal. El estado vive en la URL (?vista, ?registro, ?nuevo, ?rutina, ?ejercicio) para que el
+ * acceso rápido de Hoy abra directamente el formulario.
  */
 export function FitnessPage() {
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
   const measurements = useMeasurements()
-
   const tab = TABS.find((item) => item.value === params.get('vista'))?.value ?? 'PROGRESS'
+  const needsCatalog = tab === 'ROUTINES' || tab === 'EXERCISES' || params.has('rutina') || params.has('ejercicio')
+  const exercises = useExercises(needsCatalog)
+  const routines = useRoutines(needsCatalog)
+
   const editingId = params.get('registro')
   const creating = params.get('nuevo') === '1'
   const editing = editingId ? measurements.data?.find((m) => m.id === editingId) : undefined
+  const routineParam = params.get('rutina')
+  const routine = routineParam && routineParam !== NEW ? routines.data?.find((r) => r.id === routineParam) : undefined
+  const exerciseParam = params.get('ejercicio')
+  const exercise = exerciseParam && exerciseParam !== NEW ? exercises.data?.find((e) => e.id === exerciseParam) : undefined
 
   const update = useCallback(
     (changes: Record<string, string | null>) => {
@@ -44,13 +59,20 @@ export function FitnessPage() {
     [setParams],
   )
 
+  const action =
+    tab === 'ROUTINES'
+      ? { label: t('fitness.routines.newShort'), open: () => update({ rutina: NEW }) }
+      : tab === 'EXERCISES'
+        ? { label: t('fitness.exercises.newShort'), open: () => update({ ejercicio: NEW }) }
+        : { label: t('fitness.addEntry'), open: () => update({ nuevo: '1', registro: null }) }
+
   return (
     <div className="page stack-lg">
       <header className="page-header page-header-row">
         <h1 className="h1">{t('fitness.title')}</h1>
-        <button type="button" className="button button-primary button-small" onClick={() => update({ nuevo: '1', registro: null })}>
+        <button type="button" className="button button-primary button-small" onClick={action.open}>
           <PlusIcon />
-          {t('fitness.addEntry')}
+          {action.label}
         </button>
       </header>
 
@@ -69,6 +91,8 @@ export function FitnessPage() {
       </nav>
 
       {tab === 'PROGRESS' && <ProgressView onAdd={() => update({ nuevo: '1' })} onOpen={(id) => update({ registro: id })} />}
+      {tab === 'ROUTINES' && <RoutinesView onAdd={() => update({ rutina: NEW })} onOpen={(id) => update({ rutina: id })} />}
+      {tab === 'EXERCISES' && <ExercisesView onOpen={(id) => update({ ejercicio: id })} />}
       {tab === 'PROFILE' && <ProfileView />}
 
       {measurements.data && (creating || editing) && (
@@ -78,6 +102,17 @@ export function FitnessPage() {
           existing={measurements.data}
           onClose={() => update({ registro: null, nuevo: null })}
         />
+      )}
+      {exercises.data && routines.data && (routineParam === NEW || routine) && (
+        <RoutineEditor
+          key={routineParam}
+          routine={routine ?? null}
+          exercises={exercises.data}
+          onClose={() => update({ rutina: null })}
+        />
+      )}
+      {exercises.data && (exerciseParam === NEW || exercise) && (
+        <ExerciseEditor key={exerciseParam} exercise={exercise ?? null} onClose={() => update({ ejercicio: null })} />
       )}
     </div>
   )

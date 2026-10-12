@@ -24,3 +24,10 @@ export function formatDecimal(value: number, locale: string, maxDecimals = 1, si
     signDisplay: signed ? 'exceptZero' : 'auto',
   }).format(value)
 }
+
+/** Entero sin signo (series, repeticiones, segundos): undefined si está vacío, null si no es válido. */
+export function parseInteger(text: string): number | null | undefined {
+  const clean = text.trim()
+  if (clean === '') return undefined
+  return /^\d{1,5}$/.test(clean) ? Number(clean) : null
+}

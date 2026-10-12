@@ -35,6 +35,16 @@ public final class ApiClient {
         return send(HttpRequest.newBuilder(uri(path)).GET());
     }
 
+    /** Lectura binaria (p. ej. una imagen). */
+    public HttpResponse<byte[]> getBytes(String path) {
+        try {
+            return client.send(HttpRequest.newBuilder(uri(path)).GET().header("Accept-Language", "es").build(),
+                    HttpResponse.BodyHandlers.ofByteArray());
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     public HttpResponse<String> post(String path, String json) {
         return withCsrf(path, "POST", json);
     }

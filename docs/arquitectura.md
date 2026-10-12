@@ -51,6 +51,7 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | Alimentación sin valores inventados | Un alimento puede guardarse solo con el nombre: cantidad, calorías y macros son opcionales y la app no los rellena ni los estima por su cuenta. Si el usuario indica que lo que ha escrito es aproximado, se guarda `estimated` y los totales marcan con «≈» solo los nutrientes a los que contribuye algún valor estimado. Los totales suman únicamente lo anotado. |
 | Objetivos de alimentación opcionales y puestos por el usuario | Calorías, macros y agua son opcionales; la app no los calcula. Si se ponen menos de 1200 kcal se muestra un aviso, y el formulario recuerda que no sustituye a un profesional de la salud o de la nutrición. |
 | Diario solo de lo ya comido | No se admiten días futuros en el diario (lo planificado irá en la planificación semanal). Una comida habitual es una plantilla: al registrarla se copian sus alimentos al día y después se editan sueltos. El resumen semanal hace medias solo con los días que tienen algo registrado. |
+| Plan semanal de comidas separado del diario | Lo planificado vive en `planned_meal` y nunca suma en el diario. Al «pasarlo al diario» (solo hoy o días anteriores, una vez) se copian los alimentos de su comida habitual; si no tiene, se anota solo el título, sin nutrientes. Las calorías planificadas y la lista de la compra se calculan en la app a partir de las comidas habituales, sin estimar nada más. Borrar una comida habitual deja el plan con su título. La preparación anticipada es un día opcional (como tarde, el de la comida) y una marca de «preparada». «Repetir la semana anterior» copia el plan sin marcas. |
 | Migraciones con Flyway, `ddl-auto: validate` | El esquema solo cambia con migraciones versionadas. |
 | Pruebas de integración con Testcontainers | Se prueba contra PostgreSQL real, no contra una base de datos en memoria. |
 
@@ -95,6 +96,7 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | `nutrition_day` | Por día: agua bebida y una nota por comida (desayuno, comida, cena, picoteo). |
 | `food_entry` | Alimentos anotados: fecha, comida, nombre, cantidad y unidad, calorías y macros (todo opcional) y si los valores son estimados. |
 | `saved_meal` / `saved_meal_item` | Comidas habituales con sus alimentos, para registrarlas de una vez. |
+| `planned_meal` | Plan semanal: día, comida, título, comida habitual opcional, notas, día de preparación, si está preparada y si ya se pasó al diario. |
 | `finance_recurring` | Reglas de movimientos recurrentes: importe, categoría, cuenta, descripción, frecuencia, cada cuántos, inicio, fin y próxima fecha. Los movimientos generados guardan `recurring_id` y la fecha de su aparición. |
 
 ## Riesgos y temas abiertos

@@ -60,6 +60,13 @@ export function formatShortDate(iso: string, locale: string): string {
   )
 }
 
+/** Fecha con año y sin día de la semana: «1 sept 2026». */
+export function formatDateWithYear(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
+    isoToUtcDate(iso),
+  )
+}
+
 /** «Octubre de 2026». Con capitalize false se deja como lo da Intl, para usarlo dentro de una frase. */
 export function formatMonthYear(iso: string, locale: string, capitalize = true): string {
   const text = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(

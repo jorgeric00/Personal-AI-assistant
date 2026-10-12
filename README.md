@@ -14,7 +14,7 @@ técnicas en [docs/arquitectura.md](docs/arquitectura.md).
 | 1. Base | PWA instalable, inicio de sesión, Docker Compose, CI | ✅ |
 | 2. Día a día | Tareas y recordatorios con notificaciones, notas, dashboard de hoy | ✅ |
 | 3. Finanzas | Movimientos, presupuestos, resúmenes mensuales | Hecho ✅ (movimientos, categorías, cuentas, resumen, gráficos, ahorro, presupuestos con avisos, recurrentes y CSV) |
-| 4. Entrenador personal | Entrenamientos, alimentación, evolución física, agenda y hábitos | Pendiente |
+| 4. Entrenador personal | Entrenamientos, alimentación, evolución física, agenda y hábitos | En curso: perfil físico y evolución (peso, medidas, gráficos y comparación) ✅ · entrenamientos, alimentación y objetivos pendiente |
 
 ## Arrancar con Docker (recomendado)
 

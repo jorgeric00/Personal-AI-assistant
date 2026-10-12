@@ -2,7 +2,9 @@ package com.lifeos.nutrition;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
@@ -74,10 +76,11 @@ public final class NutritionDtos {
 
     /**
      * Sumas de lo registrado. Solo suman los valores anotados: {@code withoutCalories} cuenta los alimentos sin
-     * calorías y {@code estimated} indica si alguna suma incluye valores estimados.
+     * calorías. {@code estimated} indica si alguna suma incluye valores estimados y {@code estimatedFields} cuáles
+     * (calories, proteinG, carbsG, fatG).
      */
     public record Totals(int calories, BigDecimal proteinG, BigDecimal carbsG, BigDecimal fatG, int entries,
-            int withoutCalories, boolean estimated) {
+            int withoutCalories, boolean estimated, List<String> estimatedFields) {
 
         static Totals of(List<Food> foods) {
             int calories = 0;
@@ -85,19 +88,36 @@ public final class NutritionDtos {
             BigDecimal carbs = BigDecimal.ZERO;
             BigDecimal fat = BigDecimal.ZERO;
             int withoutCalories = 0;
-            boolean estimated = false;
+            Set<String> estimated = new LinkedHashSet<>();
             for (Food f : foods) {
                 if (f.calories() != null) {
                     calories += f.calories();
+                    mark(estimated, f, "calories");
                 } else {
                     withoutCalories++;
                 }
-                protein = f.proteinG() == null ? protein : protein.add(f.proteinG());
-                carbs = f.carbsG() == null ? carbs : carbs.add(f.carbsG());
-                fat = f.fatG() == null ? fat : fat.add(f.fatG());
-                estimated |= f.estimated();
+                if (f.proteinG() != null) {
+                    protein = protein.add(f.proteinG());
+                    mark(estimated, f, "proteinG");
+                }
+                if (f.carbsG() != null) {
+                    carbs = carbs.add(f.carbsG());
+                    mark(estimated, f, "carbsG");
+                }
+                if (f.fatG() != null) {
+                    fat = fat.add(f.fatG());
+                    mark(estimated, f, "fatG");
+                }
             }
-            return new Totals(calories, protein, carbs, fat, foods.size(), withoutCalories, estimated);
+            List<String> fields = List.of("calories", "proteinG", "carbsG", "fatG").stream()
+                    .filter(estimated::contains).toList();
+            return new Totals(calories, protein, carbs, fat, foods.size(), withoutCalories, !fields.isEmpty(), fields);
+        }
+
+        private static void mark(Set<String> estimated, Food food, String field) {
+            if (food.estimated()) {
+                estimated.add(field);
+            }
         }
     }
 

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 
 import { PlusIcon } from '../../ui/icons'
+import { NutritionView } from '../nutrition/NutritionView'
 import { useExercises, useMeasurements, useRoutines } from './api'
 import { ExerciseEditor } from './ExerciseEditor'
 import { ExercisesView } from './ExercisesView'
@@ -14,11 +15,12 @@ import { RoutineEditor } from './RoutineEditor'
 import { RoutinesView } from './RoutinesView'
 import { WorkoutsView } from './WorkoutsView'
 
-type Tab = 'WORKOUTS' | 'PROGRESS' | 'ROUTINES' | 'EXERCISES' | 'PROFILE'
+type Tab = 'WORKOUTS' | 'FOOD' | 'PROGRESS' | 'ROUTINES' | 'EXERCISES' | 'PROFILE'
 
 const TABS: { value: Tab; label: ParseKeys }[] = [
   { value: 'WORKOUTS', label: 'fitness.views.workouts' },
   { value: 'ROUTINES', label: 'fitness.views.routines' },
+  { value: 'FOOD', label: 'fitness.views.food' },
   { value: 'PROGRESS', label: 'fitness.views.progress' },
   { value: 'EXERCISES', label: 'fitness.views.exercises' },
   { value: 'PROFILE', label: 'fitness.views.profile' },
@@ -64,9 +66,11 @@ export function FitnessPage() {
   const action =
     tab === 'ROUTINES' || tab === 'WORKOUTS'
       ? { label: t('fitness.routines.newShort'), open: () => update({ rutina: NEW }) }
-      : tab === 'EXERCISES'
-        ? { label: t('fitness.exercises.newShort'), open: () => update({ ejercicio: NEW }) }
-        : { label: t('fitness.addEntry'), open: () => update({ nuevo: '1', registro: null }) }
+      : tab === 'FOOD'
+        ? { label: t('nutrition.quickAdd'), open: () => update({ alimento: 'nuevo' }) }
+        : tab === 'EXERCISES'
+          ? { label: t('fitness.exercises.newShort'), open: () => update({ ejercicio: NEW }) }
+          : { label: t('fitness.addEntry'), open: () => update({ nuevo: '1', registro: null }) }
 
   return (
     <div className="page stack-lg">
@@ -93,6 +97,7 @@ export function FitnessPage() {
       </nav>
 
       {tab === 'WORKOUTS' && <WorkoutsView />}
+      {tab === 'FOOD' && <NutritionView />}
       {tab === 'PROGRESS' && <ProgressView onAdd={() => update({ nuevo: '1' })} onOpen={(id) => update({ registro: id })} />}
       {tab === 'ROUTINES' && <RoutinesView onAdd={() => update({ rutina: NEW })} onOpen={(id) => update({ rutina: id })} />}
       {tab === 'EXERCISES' && <ExercisesView onOpen={(id) => update({ ejercicio: id })} />}

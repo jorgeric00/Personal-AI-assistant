@@ -1,4 +1,4 @@
-import type { ParseKeys } from 'i18next'
+import type { ParseKeys, TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 
@@ -181,7 +181,7 @@ function groupTasks(
   tab: Tab,
   today: string,
   relativeDate: (iso: string) => string,
-  t: ReturnType<typeof useTranslation>['t'],
+  t: TFunction,
 ): Group[] {
   if (tasks.length === 0) return []
   if (tab === 'DONE') return [{ key: 'done', title: '', tasks }]

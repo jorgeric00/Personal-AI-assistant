@@ -4,10 +4,10 @@
  */
 
 /** Lee lo que escribe el usuario: undefined si está vacío, null si no es un número válido. */
-export function parseDecimal(text: string, maxDecimals = 2): number | null | undefined {
+export function parseDecimal(text: string, maxDecimals = 2, maxIntegers = 3): number | null | undefined {
   const clean = text.trim().replace(',', '.')
   if (clean === '') return undefined
-  const pattern = new RegExp(`^\\d{1,3}(\\.\\d{1,${maxDecimals}})?$`)
+  const pattern = new RegExp(`^\\d{1,${maxIntegers}}(\\.\\d{1,${maxDecimals}})?$`)
   return pattern.test(clean) ? Number(clean) : null
 }
 

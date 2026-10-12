@@ -90,6 +90,8 @@ class NutritionIntegrationTest {
         assertThat(JsonPath.<Integer>read(day, "$.totals.entries")).isEqualTo(3);
         assertThat(JsonPath.<Integer>read(day, "$.totals.withoutCalories")).isEqualTo(1);
         assertThat(JsonPath.<Boolean>read(day, "$.totals.estimated")).isTrue();
+        // Las lentejas solo tienen estimadas calorías y proteínas; los hidratos son todos confirmados
+        assertThat(JsonPath.<List<String>>read(day, "$.totals.estimatedFields")).containsExactly("calories", "proteinG");
         assertThat(JsonPath.<Boolean>read(day, "$.meals[0].totals.estimated")).isFalse();
         assertThat(JsonPath.<Integer>read(day, "$.waterMl")).isEqualTo(1500);
         assertThat(JsonPath.<Integer>read(day, "$.target.calories")).isEqualTo(2200);

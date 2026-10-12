@@ -79,6 +79,10 @@ export function DashboardPage() {
             <PlusIcon />
             {t('finance.kind.EXPENSE')}
           </Link>
+          <Link to="/entreno?vista=FOOD&alimento=nuevo" className="quick-action">
+            <PlusIcon />
+            {t('nutrition.quickAdd')}
+          </Link>
           <Link to="/entreno?vista=PROGRESS&nuevo=1" className="quick-action">
             <PlusIcon />
             {t('fitness.quickAdd')}

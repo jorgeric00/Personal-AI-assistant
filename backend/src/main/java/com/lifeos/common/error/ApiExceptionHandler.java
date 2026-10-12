@@ -70,6 +70,14 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.badRequest().body(problem(HttpStatus.BAD_REQUEST, "malformed"));
     }
 
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
+            org.springframework.web.multipart.MaxUploadSizeExceededException ex, HttpHeaders headers,
+            HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE).body(problem(HttpStatus.CONTENT_TOO_LARGE,
+                "file-too-large"));
+    }
+
     @ExceptionHandler(FieldValidationException.class)
     ResponseEntity<ProblemDetail> handleFieldValidation(FieldValidationException ex) {
         var locale = LocaleContextHolder.getLocale();

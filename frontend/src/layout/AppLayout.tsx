@@ -4,7 +4,17 @@ import { NavLink, Outlet } from 'react-router'
 
 import type { ParseKeys } from 'i18next'
 
-import { AgendaIcon, FinanceIcon, FitnessIcon, HabitsIcon, NotesIcon, SettingsIcon, TasksIcon, TodayIcon } from '../ui/icons'
+import {
+  AgendaIcon,
+  FinanceIcon,
+  FitnessIcon,
+  GoalsIcon,
+  HabitsIcon,
+  NotesIcon,
+  SettingsIcon,
+  TasksIcon,
+  TodayIcon,
+} from '../ui/icons'
 
 interface NavItem {
   to: string
@@ -24,6 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/finanzas', label: 'nav.finance', icon: <FinanceIcon /> },
   { to: '/entreno', label: 'nav.fitness', icon: <FitnessIcon /> },
   { to: '/habitos', label: 'nav.habits', icon: <HabitsIcon /> },
+  { to: '/objetivos', label: 'nav.goals', icon: <GoalsIcon />, desktopOnly: true },
   { to: '/ajustes', label: 'nav.settings', icon: <SettingsIcon />, desktopOnly: true },
 ]
 

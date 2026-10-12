@@ -10,6 +10,7 @@ import { formatMoney } from '../../lib/money'
 import { TodayAgenda } from '../agenda/TodayAgenda'
 import { useMonthSummary } from '../finance/api'
 import { TodayWorkout } from '../fitness/TodayWorkout'
+import { TodayGoals } from '../goals/TodayGoals'
 import { TodayHabits } from '../habits/TodayHabits'
 import { useNotes } from '../notes/api'
 import { NoteCard } from '../notes/NoteCard'
@@ -137,6 +138,8 @@ export function DashboardPage() {
       <TodayWorkout />
 
       <TodayHabits />
+
+      <TodayGoals />
 
       <section className="stack-sm" aria-labelledby="reminders-title">
         <h2 id="reminders-title" className="h2">

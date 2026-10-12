@@ -34,11 +34,12 @@ const keys = {
   range: (from: string, to: string) => ['habits', from, to] as const,
 }
 
-export function useHabits(from: string, to: string) {
+export function useHabits(from: string, to: string, enabled = true) {
   return useQuery({
     queryKey: keys.range(from, to),
     queryFn: () => apiFetch<Habit[]>(`/api/habits?from=${from}&to=${to}`),
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 

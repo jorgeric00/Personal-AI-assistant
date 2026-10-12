@@ -176,11 +176,12 @@ export function useLogSavedMeal() {
   )
 }
 
-export function usePlan(from: string, to: string) {
+export function usePlan(from: string, to: string, enabled = true) {
   return useQuery({
     queryKey: keys.plan(from, to),
     queryFn: () => apiFetch<PlannedMeal[]>(`/api/nutrition/plan?from=${from}&to=${to}`),
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 

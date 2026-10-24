@@ -11,6 +11,15 @@ export function parseDecimal(text: string, maxDecimals = 2, maxIntegers = 3): nu
   return pattern.test(clean) ? Number(clean) : null
 }
 
+/** Como parseDecimal, pero admite signo negativo y 0 decimales (indicadores propios). */
+export function parseSignedDecimal(text: string, maxDecimals: number, maxIntegers = 7): number | null | undefined {
+  const clean = text.trim().replace(',', '.')
+  if (clean === '') return undefined
+  const fraction = maxDecimals > 0 ? `(\\.\\d{1,${maxDecimals}})?` : ''
+  const pattern = new RegExp(`^-?\\d{1,${maxIntegers}}${fraction}$`)
+  return pattern.test(clean) ? Number(clean) : null
+}
+
 /** Valor para rellenar un campo, con la coma decimal en español. */
 export function decimalToInput(value: number | null | undefined, locale: string) {
   if (value === null || value === undefined) return ''

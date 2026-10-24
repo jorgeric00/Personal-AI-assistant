@@ -1,11 +1,15 @@
 package com.lifeos.fitness;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,15 +27,19 @@ import com.lifeos.fitness.FitnessDtos.ProfileResponse;
 @Service
 public class FitnessService {
 
+    private static final BigDecimal CUSTOM_LIMIT = BigDecimal.valueOf(1_000_000);
+
     private final FitnessProfileRepository profiles;
     private final BodyMeasurementRepository measurements;
+    private final CustomMetricRepository customMetrics;
     private final Clock clock;
     private final LifeosProperties properties;
 
-    public FitnessService(FitnessProfileRepository profiles, BodyMeasurementRepository measurements, Clock clock,
-            LifeosProperties properties) {
+    public FitnessService(FitnessProfileRepository profiles, BodyMeasurementRepository measurements,
+            CustomMetricRepository customMetrics, Clock clock, LifeosProperties properties) {
         this.profiles = profiles;
         this.measurements = measurements;
+        this.customMetrics = customMetrics;
         this.clock = clock;
         this.properties = properties;
     }
@@ -62,7 +70,7 @@ public class FitnessService {
     /** Un registro por día: si ya existe uno en esa fecha, se edita ese en lugar de crear otro. */
     @Transactional
     public MeasurementResponse createMeasurement(UUID userId, MeasurementRequest request) {
-        validate(request);
+        validate(userId, request);
         if (measurements.findByUserIdAndDate(userId, request.date()).isPresent()) {
             throw new ConflictException("measurement-date-exists");
         }
@@ -71,7 +79,7 @@ public class FitnessService {
 
     @Transactional
     public MeasurementResponse updateMeasurement(UUID userId, UUID id, MeasurementRequest request) {
-        validate(request);
+        validate(userId, request);
         BodyMeasurement measurement = load(userId, id);
         Optional<BodyMeasurement> sameDate = measurements.findByUserIdAndDate(userId, request.date());
         if (sameDate.isPresent() && !sameDate.get().getId().equals(id)) {
@@ -86,11 +94,22 @@ public class FitnessService {
         measurements.delete(load(userId, id));
     }
 
-    private void validate(MeasurementRequest request) {
-        new FieldValidationException.Collector()
+    private void validate(UUID userId, MeasurementRequest request) {
+        FieldValidationException.Collector errors = new FieldValidationException.Collector()
                 .add(request.isEmpty(), "weightKg", "fitness.measurement.empty")
-                .add(request.date() != null && request.date().isAfter(today()), "date", "fitness.measurement.date.future")
-                .throwIfAny();
+                .add(request.date() != null && request.date().isAfter(today()), "date", "fitness.measurement.date.future");
+        // Cada valor propio debe ser de un indicador del usuario y respetar sus decimales
+        Map<UUID, CustomMetric> owned = customMetrics.findByUserIdOrderByCreatedAtAsc(userId).stream()
+                .collect(Collectors.toMap(CustomMetric::getId, Function.identity()));
+        request.customValues().forEach((id, value) -> {
+            CustomMetric metric = owned.get(id);
+            String field = "custom." + id;
+            errors.add(metric == null, field, "fitness.custom.unknown")
+                    .add(metric != null && value.abs().compareTo(CUSTOM_LIMIT) > 0, field, "fitness.custom.value.range")
+                    .add(metric != null && value.stripTrailingZeros().scale() > metric.getDecimals(), field,
+                            "fitness.custom.value.decimals." + (metric == null ? 0 : metric.getDecimals()));
+        });
+        errors.throwIfAny();
     }
 
     private BodyMeasurement load(UUID userId, UUID id) {

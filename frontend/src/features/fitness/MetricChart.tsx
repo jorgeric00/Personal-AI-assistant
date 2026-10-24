@@ -67,9 +67,7 @@ export function MetricChart({ points, label, unit, locale }: { points: MetricPoi
         <thead>
           <tr>
             <th>{t('fitness.form.date')}</th>
-            <th>
-              {label} ({unit})
-            </th>
+            <th>{unit ? `${label} (${unit})` : label}</th>
           </tr>
         </thead>
         <tbody>

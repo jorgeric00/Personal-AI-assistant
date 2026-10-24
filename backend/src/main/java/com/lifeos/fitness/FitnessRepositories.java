@@ -108,3 +108,12 @@ interface WorkoutRepository extends JpaRepository<Workout, UUID> {
             """)
     List<WorkoutDtos.DoneSetRow> findDoneSets(UUID userId);
 }
+
+interface CustomMetricRepository extends JpaRepository<CustomMetric, UUID> {
+
+    List<CustomMetric> findByUserIdOrderByCreatedAtAsc(UUID userId);
+
+    Optional<CustomMetric> findByIdAndUserId(UUID id, UUID userId);
+
+    boolean existsByUserIdAndNameIgnoreCaseAndIdNot(UUID userId, String name, UUID id);
+}

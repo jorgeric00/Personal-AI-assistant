@@ -3,11 +3,19 @@ package com.lifeos.fitness;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
+import org.hibernate.annotations.BatchSize;
+
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
 
 /** Registro de evolución física de un día: solo los valores que se quisieron anotar. */
@@ -47,6 +55,14 @@ public class BodyMeasurement {
 
     private String notes;
 
+    /** Valores de los indicadores propios, por id de indicador. */
+    @ElementCollection
+    @CollectionTable(name = "custom_metric_value", joinColumns = @JoinColumn(name = "measurement_id"))
+    @MapKeyColumn(name = "metric_id")
+    @Column(name = "value", nullable = false)
+    @BatchSize(size = 100)
+    private Map<UUID, BigDecimal> custom = new HashMap<>();
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -73,6 +89,8 @@ public class BodyMeasurement {
         this.armCm = request.armCm();
         this.thighCm = request.thighCm();
         this.notes = FitnessDtos.blankToNull(request.notes());
+        this.custom.clear();
+        this.custom.putAll(request.customValues());
         this.updatedAt = now;
     }
 
@@ -118,5 +136,9 @@ public class BodyMeasurement {
 
     public String getNotes() {
         return notes;
+    }
+
+    public Map<UUID, BigDecimal> getCustom() {
+        return custom;
     }
 }

@@ -116,6 +116,18 @@ export function SettingsPage() {
         {install.kind === 'manual' && <p className="muted">{t('settings.installManual')}</p>}
       </section>
 
+      <section className="card stack" aria-labelledby="data-title">
+        <h2 id="data-title" className="h2">
+          {t('settings.data')}
+        </h2>
+        <p className="muted">{t('settings.dataHelp')}</p>
+        {/* Enlace normal: el navegador descarga el ZIP con la sesión, sin pasar por la memoria de la app */}
+        <a className="button button-secondary" href="/api/export" download>
+          {t('settings.dataDownload')}
+        </a>
+        <p className="muted small">{t('settings.dataSensitive')}</p>
+      </section>
+
       <button
         type="button"
         className="button button-danger-outline"

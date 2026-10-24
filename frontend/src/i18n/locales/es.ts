@@ -1148,6 +1148,11 @@ const es = {
     themeSystem: 'Sistema',
     themeLight: 'Claro',
     themeDark: 'Oscuro',
+    data: 'Tus datos',
+    dataHelp:
+      'Descarga todos tus datos en un ZIP: un archivo JSON con todo lo que has registrado, tus movimientos en CSV y tus fotos de progreso.',
+    dataDownload: 'Descargar mis datos',
+    dataSensitive: 'El archivo incluye datos personales y sensibles, como medidas, fotos y finanzas. Guárdalo en un lugar seguro.',
     install: 'Instalar en el móvil',
     installed: 'LifeOS ya está instalada en este dispositivo.',
     installPrompt: 'Añade LifeOS a tu pantalla de inicio para abrirla como una app.',

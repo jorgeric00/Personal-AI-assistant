@@ -59,6 +59,17 @@ export function GoalsIcon() {
   )
 }
 
+export function ReportsIcon() {
+  return (
+    <svg {...base}>
+      <path d="M4 20h16" />
+      <path d="M7 16v-5" />
+      <path d="M12 16V6" />
+      <path d="M17 16v-8" />
+    </svg>
+  )
+}
+
 export function TasksIcon() {
   return (
     <svg {...base}>

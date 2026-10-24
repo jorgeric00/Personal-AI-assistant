@@ -11,6 +11,7 @@ import {
   GoalsIcon,
   HabitsIcon,
   NotesIcon,
+  ReportsIcon,
   SettingsIcon,
   TasksIcon,
   TodayIcon,
@@ -35,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/entreno', label: 'nav.fitness', icon: <FitnessIcon /> },
   { to: '/habitos', label: 'nav.habits', icon: <HabitsIcon /> },
   { to: '/objetivos', label: 'nav.goals', icon: <GoalsIcon />, desktopOnly: true },
+  { to: '/informes', label: 'nav.reports', icon: <ReportsIcon />, desktopOnly: true },
   { to: '/ajustes', label: 'nav.settings', icon: <SettingsIcon />, desktopOnly: true },
 ]
 

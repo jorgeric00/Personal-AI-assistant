@@ -10,6 +10,7 @@ import { WorkoutPage } from '../features/fitness/WorkoutPage'
 import { GoalsPage } from '../features/goals/GoalsPage'
 import { HabitsPage } from '../features/habits/HabitsPage'
 import { NotesPage } from '../features/notes/NotesPage'
+import { ReportsPage } from '../features/reports/ReportsPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { TasksPage } from '../features/tasks/TasksPage'
 import { AppLayout } from '../layout/AppLayout'
@@ -31,6 +32,7 @@ export const routes: RouteObject[] = [
           { path: 'entreno/sesion/:id', element: <WorkoutPage /> },
           { path: 'habitos', element: <HabitsPage /> },
           { path: 'objetivos', element: <GoalsPage /> },
+          { path: 'informes', element: <ReportsPage /> },
           { path: 'ajustes', element: <SettingsPage /> },
         ],
       },

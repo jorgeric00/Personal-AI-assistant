@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router'
 import { useCurrentUser } from '../../auth/auth'
 import { formatLongDate, greetingKey, todayIso } from '../../lib/date'
 import { useDateFormat } from '../../lib/useRelativeDate'
-import { PlusIcon, SettingsIcon } from '../../ui/icons'
+import { PlusIcon, ReportsIcon, SettingsIcon } from '../../ui/icons'
 import { formatMoney } from '../../lib/money'
 import { TodayAgenda } from '../agenda/TodayAgenda'
 import { useMonthSummary } from '../finance/api'
@@ -56,10 +56,15 @@ export function DashboardPage() {
           <p className="eyebrow">{formatLongDate(now, locale, timeZone)}</p>
           <h1 className="h1">{user ? t('greeting.withName', { greeting, name: user.displayName }) : greeting}</h1>
         </div>
-        {/* En el móvil Ajustes no cabe en la barra inferior */}
-        <Link to="/ajustes" className="icon-button mobile-only" aria-label={t('nav.settings')}>
-          <SettingsIcon />
-        </Link>
+        {/* En el móvil Informes y Ajustes no caben en la barra inferior */}
+        <div className="header-actions mobile-only">
+          <Link to="/informes" className="icon-button" aria-label={t('nav.reports')}>
+            <ReportsIcon />
+          </Link>
+          <Link to="/ajustes" className="icon-button" aria-label={t('nav.settings')}>
+            <SettingsIcon />
+          </Link>
+        </div>
       </header>
 
       <section aria-labelledby="quick-title" className="stack-sm">

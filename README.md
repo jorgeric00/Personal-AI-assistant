@@ -15,6 +15,7 @@ técnicas en [docs/arquitectura.md](docs/arquitectura.md).
 | 2. Día a día | Tareas y recordatorios con notificaciones, notas, dashboard de hoy | ✅ |
 | 3. Finanzas | Movimientos, presupuestos, resúmenes mensuales | Hecho ✅ (movimientos, categorías, cuentas, resumen, gráficos, ahorro, presupuestos con avisos, recurrentes y CSV) |
 | 4. Entrenador personal | Entrenamientos, alimentación, evolución física, agenda y hábitos | En curso: perfil físico y evolución (peso, medidas, gráficos y comparación) ✅ · catálogo de ejercicios y rutinas ✅ · registro de entrenamientos, récords y constancia ✅ · agenda de actividades (día, semana y mes, solapamientos, plan frente a realizado) ✅ · diario de alimentación (comidas, agua, notas, comidas habituales, objetivos opcionales y resumen semanal) ✅ · plan semanal de comidas, preparación anticipada y lista de la compra ✅ · hábitos (diarios o semanales, historial y tendencia, sin rachas que castiguen) ✅ · objetivos personales con progreso real a partir de los registros ✅ · diario fotográfico privado con comparación entre fechas ✅ · indicadores propios (sueño, pulsaciones…) junto al peso y las medidas ✅ · informes por semana o mes con la cifra del periodo anterior ✅ |
+| 5. Tus datos | Copias de seguridad, restauración y exportación completa | En curso: copias automáticas diarias con restauración documentada ✅ · descarga de todos tus datos en ZIP ✅ |
 
 ## Arrancar con Docker (recomendado)
 
@@ -29,6 +30,9 @@ Abre <http://localhost:8080> e inicia sesión con `LIFEOS_ADMIN_EMAIL` y `LIFEOS
 La cuenta se crea solo la primera vez que arranca la aplicación; después esas variables se ignoran.
 
 Para parar: `docker compose down` (los datos se conservan en el volumen `db-data`).
+
+Cada día se guarda una copia de la base de datos en `backups/`. Cómo restaurarla y cómo descargar tus datos:
+[docs/copias-de-seguridad.md](docs/copias-de-seguridad.md).
 
 ## Desarrollo
 

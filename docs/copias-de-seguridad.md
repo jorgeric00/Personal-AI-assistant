@@ -96,3 +96,13 @@ En **Ajustes → Tus datos → Descargar mis datos** se descarga `lifeos-AAAA-MM
   su fichero.
 
 El servidor no guarda la exportación: se genera al pedirla y solo la puede descargar quien ha iniciado sesión.
+
+## Borrar datos
+
+En **Ajustes → Tus datos → Borrar datos…** puedes borrar para siempre bloques concretos (por ejemplo, solo
+Finanzas) o todo. Hay que escribir la contraseña para confirmar. Tu cuenta se mantiene y puedes seguir usando la
+app desde cero en lo que hayas borrado.
+
+Lo borrado desaparece de la app al momento, pero sigue dentro de las copias automáticas anteriores hasta que se
+sustituyen (14 días por defecto). Si quieres que desaparezca también de ahí, borra a mano los ficheros de
+`backups/` de antes del borrado. Descarga antes tus datos si quieres conservar una copia propia.

@@ -1,11 +1,12 @@
 import type { ParseKeys } from 'i18next'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 
 import { useCurrentUser, useLogout, useUpdateLanguage } from '../../auth/auth'
 import { LANGUAGE_NAMES, SUPPORTED_LANGUAGES, isLanguage } from '../../i18n'
 import { useThemePreference, type ThemePreference } from '../../theme/theme'
 import { NotificationSettings } from '../notifications/NotificationSettings'
+import { DeleteDataSheet } from './DeleteDataSheet'
 import { useInstallPrompt } from './useInstallPrompt'
 
 const THEME_OPTIONS: { value: ThemePreference; label: ParseKeys }[] = [
@@ -23,6 +24,17 @@ export function SettingsPage() {
   const [theme, setTheme] = useThemePreference()
   const install = useInstallPrompt()
   const language = isLanguage(i18n.language) ? i18n.language : undefined
+  const [params, setParams] = useSearchParams()
+  const setDeleting = (open: boolean) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        if (open) next.set('borrar', '1')
+        else next.delete('borrar')
+        return next
+      },
+      { replace: true },
+    )
 
   return (
     <div className="page stack-lg">
@@ -126,7 +138,11 @@ export function SettingsPage() {
           {t('settings.dataDownload')}
         </a>
         <p className="muted small">{t('settings.dataSensitive')}</p>
+        <button type="button" className="button button-danger-outline" onClick={() => setDeleting(true)}>
+          {t('settings.deleteOpen')}
+        </button>
       </section>
+      {params.get('borrar') === '1' && <DeleteDataSheet onClose={() => setDeleting(false)} />}
 
       <button
         type="button"

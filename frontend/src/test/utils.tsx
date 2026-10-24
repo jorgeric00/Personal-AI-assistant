@@ -31,6 +31,7 @@ const defaultHandlers: Record<string, Handler> = {
   'GET /api/note-tags': () => json([]),
   'GET /api/fitness/routines': () => json([]),
   'GET /api/fitness/workouts': () => json([]),
+  'GET /api/fitness/metrics': () => json([]),
 }
 
 /** Lecturas por defecto que dependen de un identificador. */

@@ -20,7 +20,7 @@ const goal = (overrides: Partial<Goal>): Goal => ({
   achievedOn: null,
   ...overrides,
 })
-const empty = { notes: null, weightKg: null, bodyFatPct: null, waistCm: null, chestCm: null, hipCm: null, armCm: null, thighCm: null }
+const empty = { notes: null, custom: {}, weightKg: null, bodyFatPct: null, waistCm: null, chestCm: null, hipCm: null, armCm: null, thighCm: null }
 const measurement = (date: string, values: Partial<Measurement>): Measurement => ({ ...empty, id: date, date, ...values })
 
 // Lunes 12 de octubre de 2026

@@ -3033,3 +3033,8 @@ a.icon-button {
   border-radius: var(--radius-sm);
   background: var(--surface-2);
 }
+
+.progress-actions {
+  display: flex;
+  justify-content: flex-end;
+}

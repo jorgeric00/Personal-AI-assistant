@@ -59,7 +59,11 @@ export const METRIC_DECIMALS: Record<Metric, number> = {
   thighCm: 1,
 }
 
-export type MeasurementInput = { date: string; notes: string | null } & Record<Metric, number | null>
+/** Valores de los indicadores propios del registro, por id de indicador. */
+export type MeasurementInput = { date: string; notes: string | null; custom: Record<string, number> } & Record<
+  Metric,
+  number | null
+>
 
 export type Measurement = MeasurementInput & { id: string }
 
@@ -67,6 +71,7 @@ const keys = {
   all: ['fitness'] as const,
   profile: ['fitness', 'profile'] as const,
   measurements: ['fitness', 'measurements'] as const,
+  customMetrics: ['fitness', 'metrics'] as const,
 }
 
 export function useProfile() {
@@ -102,6 +107,37 @@ export function useSaveMeasurement() {
 
 export function useDeleteMeasurement() {
   return useFitnessMutation((id: string) => apiFetch<void>(`/api/fitness/measurements/${id}`, { method: 'DELETE' }))
+}
+
+/** Indicador propio de la evolución (sueño, pulsaciones…). */
+export interface CustomMetric {
+  id: string
+  name: string
+  unit: string | null
+  decimals: number
+  archived: boolean
+}
+
+export type CustomMetricInput = Omit<CustomMetric, 'id'>
+
+export function useCustomMetrics(enabled = true) {
+  return useQuery({
+    queryKey: keys.customMetrics,
+    queryFn: () => apiFetch<CustomMetric[]>('/api/fitness/metrics'),
+    enabled,
+  })
+}
+
+export function useSaveCustomMetric() {
+  return useFitnessMutation(({ id, input }: { id?: string; input: CustomMetricInput }) =>
+    id
+      ? apiFetch<CustomMetric>(`/api/fitness/metrics/${id}`, { method: 'PUT', body: input })
+      : apiFetch<CustomMetric>('/api/fitness/metrics', { method: 'POST', body: input }),
+  )
+}
+
+export function useDeleteCustomMetric() {
+  return useFitnessMutation((id: string) => apiFetch<void>(`/api/fitness/metrics/${id}`, { method: 'DELETE' }))
 }
 
 export type MuscleGroup = 'CHEST' | 'BACK' | 'LEGS' | 'SHOULDERS' | 'ARMS' | 'CORE' | 'FULL_BODY' | 'CARDIO'

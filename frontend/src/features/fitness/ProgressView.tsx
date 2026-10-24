@@ -5,8 +5,9 @@ import { addDays, formatDateWithYear } from '../../lib/date'
 import { formatDecimal } from '../../lib/decimal'
 import { useDateFormat } from '../../lib/useRelativeDate'
 import { PlusIcon } from '../../ui/icons'
-import { METRIC_UNITS, METRICS, useMeasurements, type Measurement, type Metric } from './api'
+import { useCustomMetrics, useMeasurements, type Measurement } from './api'
 import { MetricChart } from './MetricChart'
+import { buildSeries, withUnit, type Series } from './series'
 
 type Period = '3M' | '6M' | '1Y' | 'ALL'
 const PERIODS: { value: Period; days: number | null }[] = [
@@ -19,21 +20,24 @@ const PERIODS: { value: Period; days: number | null }[] = [
 interface ProgressViewProps {
   onAdd: () => void
   onOpen: (id: string) => void
+  onManage: () => void
 }
 
 /**
- * Evolución física: último valor de cada medida y su cambio desde la fecha elegida, gráfico por medida y
- * periodo, e historial de registros. Solo muestra lo registrado; no rellena huecos ni saca conclusiones.
+ * Evolución física: último valor de cada medida (y de cada indicador propio) y su cambio desde la fecha elegida,
+ * gráfico por medida y periodo, e historial de registros. Solo muestra lo registrado; no rellena huecos ni saca
+ * conclusiones.
  */
-export function ProgressView({ onAdd, onOpen }: ProgressViewProps) {
+export function ProgressView({ onAdd, onOpen, onManage }: ProgressViewProps) {
   const { t } = useTranslation()
   const { locale, today } = useDateFormat()
   const measurements = useMeasurements()
+  const customMetrics = useCustomMetrics()
   const [compareFrom, setCompareFrom] = useState<string | null>(null)
-  const [metric, setMetric] = useState<Metric | null>(null)
+  const [metric, setMetric] = useState<string | null>(null)
   const [period, setPeriod] = useState<Period>('6M')
 
-  if (measurements.isPending) {
+  if (measurements.isPending || customMetrics.isPending) {
     return (
       <div className="screen-center-inline" role="status">
         <span className="spinner" aria-hidden="true" />
@@ -41,15 +45,24 @@ export function ProgressView({ onAdd, onOpen }: ProgressViewProps) {
       </div>
     )
   }
-  if (measurements.isError) {
+  const failed = measurements.error ?? customMetrics.error
+  if (failed) {
     return (
       <div className="alert alert-error" role="alert">
-        {measurements.error.message}
+        {failed.message}
       </div>
     )
   }
 
+  const manage = (
+    <button type="button" className="button button-secondary button-small" onClick={onManage}>
+      {t('fitness.custom.manage')}
+    </button>
+  )
+
   const entries = measurements.data
+  const ownMetrics = customMetrics.data
+  if (!entries || !ownMetrics) return null
   if (entries.length === 0) {
     return (
       <div className="card empty-state stack">
@@ -58,26 +71,30 @@ export function ProgressView({ onAdd, onOpen }: ProgressViewProps) {
           <PlusIcon />
           {t('fitness.addEntry')}
         </button>
+        {manage}
       </div>
     )
   }
 
   // Cronológico (el servidor los da del más reciente al más antiguo).
   const chronological = [...entries].reverse()
-  const tracked = METRICS.filter((m) => entries.some((e) => e[m] !== null))
+  const series = buildSeries(t, ownMetrics)
+  const tracked = series.filter((s) => entries.some((e) => s.value(e) !== null))
   const dates = chronological.map((e) => e.date)
   const from = compareFrom && dates.includes(compareFrom) ? compareFrom : dates[0]
-  const selected = metric && tracked.includes(metric) ? metric : (tracked[0] ?? null)
+  const selected = tracked.find((s) => s.key === metric) ?? tracked[0] ?? null
   const days = PERIODS.find((p) => p.value === period)?.days
   const since = days ? addDays(today, -days) : null
   const points = selected
     ? chronological
-        .filter((e) => e[selected] !== null && (!since || e.date >= since))
-        .map((e) => ({ date: e.date, value: e[selected] as number }))
+        .filter((e) => selected.value(e) !== null && (!since || e.date >= since))
+        .map((e) => ({ date: e.date, value: selected.value(e) as number }))
     : []
 
   return (
     <div className="stack-lg">
+      <div className="progress-actions">{manage}</div>
+
       {tracked.length > 0 && (
         <section className="card stack" aria-labelledby="latest-title">
           <h2 id="latest-title" className="h3">
@@ -96,8 +113,8 @@ export function ProgressView({ onAdd, onOpen }: ProgressViewProps) {
             </label>
           )}
           <ul className="list-plain metric-tiles">
-            {tracked.map((m) => (
-              <MetricTile key={m} metric={m} entries={chronological} from={from} locale={locale} />
+            {tracked.map((s) => (
+              <MetricTile key={s.key} series={s} entries={chronological} from={from} locale={locale} />
             ))}
           </ul>
         </section>
@@ -109,16 +126,16 @@ export function ProgressView({ onAdd, onOpen }: ProgressViewProps) {
             {t('fitness.evolution')}
           </h2>
           <div className="chips chips-scroll" role="radiogroup" aria-label={t('fitness.metric')}>
-            {tracked.map((m) => (
+            {tracked.map((s) => (
               <button
-                key={m}
+                key={s.key}
                 type="button"
                 role="radio"
-                aria-checked={selected === m}
+                aria-checked={selected.key === s.key}
                 className="chip"
-                onClick={() => setMetric(m)}
+                onClick={() => setMetric(s.key)}
               >
-                {t(`fitness.metrics.${m}`)}
+                {s.label}
               </button>
             ))}
           </div>
@@ -137,7 +154,7 @@ export function ProgressView({ onAdd, onOpen }: ProgressViewProps) {
             ))}
           </div>
           {points.length > 0 ? (
-            <MetricChart points={points} label={t(`fitness.metrics.${selected}`)} unit={METRIC_UNITS[selected]} locale={locale} />
+            <MetricChart points={points} label={selected.label} unit={selected.unit} locale={locale} />
           ) : (
             <p className="muted">{t('fitness.noDataPeriod')}</p>
           )}
@@ -155,8 +172,9 @@ export function ProgressView({ onAdd, onOpen }: ProgressViewProps) {
                 <span className="movement-main">
                   <span className="movement-title">{formatDateWithYear(entry.date, locale)}</span>
                   <span className="movement-meta">
-                    {METRICS.filter((m) => entry[m] !== null)
-                      .map((m) => `${t(`fitness.metricsShort.${m}`)} ${formatDecimal(entry[m] as number, locale, 2)} ${METRIC_UNITS[m]}`)
+                    {series
+                      .filter((s) => s.value(entry) !== null)
+                      .map((s) => `${s.short} ${withUnit(formatDecimal(s.value(entry) as number, locale, 2), s.unit)}`)
                       .join(' · ')}
                   </span>
                   {entry.notes && <span className="movement-meta entry-notes">{entry.notes}</span>}
@@ -170,24 +188,27 @@ export function ProgressView({ onAdd, onOpen }: ProgressViewProps) {
   )
 }
 
-/** Último valor de una medida y diferencia con el primer valor registrado desde la fecha de comparación. */
-function MetricTile({ metric, entries, from, locale }: { metric: Metric; entries: Measurement[]; from: string; locale: string }) {
+/** Último valor de una serie y diferencia con el primer valor registrado desde la fecha de comparación. */
+function MetricTile({ series, entries, from, locale }: { series: Series; entries: Measurement[]; from: string; locale: string }) {
   const { t } = useTranslation()
-  const withValue = entries.filter((e) => e[metric] !== null)
+  const withValue = entries.filter((e) => series.value(e) !== null)
   const latest = withValue[withValue.length - 1]
   const base = withValue.find((e) => e.date >= from)
-  const unit = METRIC_UNITS[metric]
-  const diff = base && base.date < latest.date ? (latest[metric] as number) - (base[metric] as number) : null
+  const latestValue = series.value(latest) as number
+  const diff = base && base.date < latest.date ? latestValue - (series.value(base) as number) : null
   return (
     <li className="metric-tile">
-      <span className="stat-label">{t(`fitness.metrics.${metric}`)}</span>
+      <span className="stat-label">{series.label}</span>
       <span className="metric-value">
-        {formatDecimal(latest[metric] as number, locale, 2)} <span className="metric-unit">{unit}</span>
+        {formatDecimal(latestValue, locale, 2)} {series.unit && <span className="metric-unit">{series.unit}</span>}
       </span>
       <span className="metric-diff">
         {diff === null
           ? formatDateWithYear(latest.date, locale)
-          : t('fitness.diff', { value: `${formatDecimal(diff, locale, 2, true)} ${unit}`, date: formatDateWithYear(base!.date, locale) })}
+          : t('fitness.diff', {
+              value: withUnit(formatDecimal(diff, locale, 2, true), series.unit),
+              date: formatDateWithYear(base!.date, locale),
+            })}
       </span>
     </li>
   )

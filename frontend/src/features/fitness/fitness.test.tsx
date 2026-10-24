@@ -16,6 +16,7 @@ function entry(overrides: Partial<Measurement>): Measurement {
   return {
     id: 'm1',
     date: '2026-10-10',
+    custom: {},
     weightKg: null,
     bodyFatPct: null,
     waistCm: null,
@@ -131,6 +132,7 @@ describe('entreno', () => {
         armCm: null,
         thighCm: null,
         notes: null,
+        custom: {},
       }),
     )
 

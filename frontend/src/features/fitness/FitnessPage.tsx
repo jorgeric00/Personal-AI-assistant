@@ -10,6 +10,7 @@ import { POSES, usePhotos, type PhotoPose } from '../photos/api'
 import { PhotoEditor } from '../photos/PhotoEditor'
 import { PhotosView } from '../photos/PhotosView'
 import { useExercises, useMeasurements, useRoutines } from './api'
+import { CustomMetricsSheet } from './CustomMetricsSheet'
 import { ExerciseEditor } from './ExerciseEditor'
 import { ExercisesView } from './ExercisesView'
 import { MeasurementEditor } from './MeasurementEditor'
@@ -113,7 +114,13 @@ export function FitnessPage() {
 
       {tab === 'WORKOUTS' && <WorkoutsView />}
       {tab === 'FOOD' && <NutritionView />}
-      {tab === 'PROGRESS' && <ProgressView onAdd={() => update({ nuevo: '1' })} onOpen={(id) => update({ registro: id })} />}
+      {tab === 'PROGRESS' && (
+        <ProgressView
+          onAdd={() => update({ nuevo: '1' })}
+          onOpen={(id) => update({ registro: id })}
+          onManage={() => update({ indicadores: '1' })}
+        />
+      )}
       {tab === 'PHOTOS' && (
         <PhotosView
           pose={pose}
@@ -126,6 +133,7 @@ export function FitnessPage() {
       {tab === 'EXERCISES' && <ExercisesView onOpen={(id) => update({ ejercicio: id })} />}
       {tab === 'PROFILE' && <ProfileView />}
 
+      {params.get('indicadores') === '1' && <CustomMetricsSheet onClose={() => update({ indicadores: null })} />}
       {(photoParam === NEW_PHOTO || photo) && (
         <PhotoEditor
           key={photoParam}

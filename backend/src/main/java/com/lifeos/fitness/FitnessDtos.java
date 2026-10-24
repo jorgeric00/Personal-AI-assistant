@@ -2,6 +2,8 @@ package com.lifeos.fitness;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import jakarta.validation.constraints.DecimalMax;
@@ -9,6 +11,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -79,21 +82,53 @@ public final class FitnessDtos {
             @DecimalMin(value = "10", message = "{fitness.perimeter.invalid}")
             @DecimalMax(value = "300", message = "{fitness.perimeter.invalid}")
             @Digits(integer = 3, fraction = 1, message = "{fitness.decimals.one}") BigDecimal thighCm,
-            @Size(max = 1000, message = "{fitness.text.too-long}") String notes) {
+            @Size(max = 1000, message = "{fitness.text.too-long}") String notes,
+            Map<UUID, BigDecimal> custom) {
+
+        /** Valores de indicadores propios que se han rellenado (los vacíos se descartan). */
+        Map<UUID, BigDecimal> customValues() {
+            Map<UUID, BigDecimal> values = new HashMap<>();
+            if (custom != null) {
+                custom.forEach((id, value) -> {
+                    if (id != null && value != null) {
+                        values.put(id, value);
+                    }
+                });
+            }
+            return values;
+        }
 
         boolean isEmpty() {
             return weightKg == null && bodyFatPct == null && waistCm == null && chestCm == null && hipCm == null
-                    && armCm == null && thighCm == null && blankToNull(notes) == null;
+                    && armCm == null && thighCm == null && blankToNull(notes) == null && customValues().isEmpty();
         }
     }
 
     public record MeasurementResponse(UUID id, LocalDate date, BigDecimal weightKg, BigDecimal bodyFatPct,
             BigDecimal waistCm, BigDecimal chestCm, BigDecimal hipCm, BigDecimal armCm, BigDecimal thighCm,
-            String notes) {
+            String notes, Map<UUID, BigDecimal> custom) {
 
         static MeasurementResponse from(BodyMeasurement m) {
             return new MeasurementResponse(m.getId(), m.getDate(), m.getWeightKg(), m.getBodyFatPct(), m.getWaistCm(),
-                    m.getChestCm(), m.getHipCm(), m.getArmCm(), m.getThighCm(), m.getNotes());
+                    m.getChestCm(), m.getHipCm(), m.getArmCm(), m.getThighCm(), m.getNotes(),
+                    Map.copyOf(m.getCustom()));
+        }
+    }
+
+    public record CustomMetricRequest(
+            @NotBlank(message = "{fitness.custom.name.required}")
+            @Size(max = 40, message = "{fitness.custom.name.too-long}") String name,
+            @Size(max = 12, message = "{fitness.custom.unit.too-long}") String unit,
+            @NotNull(message = "{fitness.custom.decimals.invalid}")
+            @Min(value = 0, message = "{fitness.custom.decimals.invalid}")
+            @Max(value = 2, message = "{fitness.custom.decimals.invalid}") Integer decimals,
+            Boolean archived) {
+    }
+
+    public record CustomMetricResponse(UUID id, String name, String unit, int decimals, boolean archived) {
+
+        static CustomMetricResponse from(CustomMetric m) {
+            return new CustomMetricResponse(m.getId(), m.getName(), m.getUnit(), m.getDecimals(), m.isArchived());
         }
     }
 }

@@ -43,6 +43,7 @@ const measurement = (date: string, weightKg: number): Measurement => ({
   id: date,
   date,
   notes: null,
+  custom: {},
   weightKg,
   bodyFatPct: null,
   waistCm: null,

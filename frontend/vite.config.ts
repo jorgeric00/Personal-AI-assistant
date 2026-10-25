@@ -5,6 +5,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 const backend = process.env.LIFEOS_BACKEND_URL ?? 'http://localhost:8080'
 
+const shortcutIcon = { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }
+
 export default defineConfig({
   plugins: [
     react(),
@@ -31,6 +33,13 @@ export default defineConfig({
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+        // Atajos al mantener pulsado el icono (Android y escritorio); abren directamente el formulario.
+        shortcuts: [
+          { name: 'Nueva tarea', short_name: 'Tarea', url: '/tareas?nueva=TASK', icons: [shortcutIcon] },
+          { name: 'Nuevo gasto', short_name: 'Gasto', url: '/finanzas?nuevo=EXPENSE', icons: [shortcutIcon] },
+          { name: 'Nueva actividad', short_name: 'Actividad', url: '/agenda?actividad=nueva', icons: [shortcutIcon] },
+          { name: 'Hábitos de hoy', short_name: 'Hábitos', url: '/habitos', icons: [shortcutIcon] },
         ],
       },
       injectManifest: {

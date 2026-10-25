@@ -199,7 +199,9 @@ class PushIntegrationTest {
     @Test
     void notifiesAgendaActivitiesBeforeTheyStartExceptCancelledOnes() throws Exception {
         subscribeBrowser();
-        String category = JsonPath.read(api.get("/api/agenda/categories").body(), "$[0].id");
+        // Otras pruebas comparten la base de datos y pueden haber archivado alguna categoría
+        List<String> active = JsonPath.read(api.get("/api/agenda/categories").body(), "$[?(@.archived == false)].id");
+        String category = active.getFirst();
         HttpResponse<String> created = api.post("/api/agenda/activities", """
                 {"title":"Clase de yoga","categoryId":"%s","startDate":"2026-10-11","startTime":"18:00",
                  "endDate":"2026-10-11","endTime":"19:00","location":"Gimnasio","reminderMinutesBefore":60,

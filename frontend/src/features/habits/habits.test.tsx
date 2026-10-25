@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -20,6 +20,7 @@ const habit = (overrides: Partial<Habit>): Habit => ({
   timesPerWeek: null,
   startDate: '2026-10-01',
   archived: false,
+  reminderTime: null,
   checks: [],
   ...overrides,
 })
@@ -102,6 +103,9 @@ describe('hábitos', () => {
     await user.type(within(dialog).getByLabelText('Nombre'), 'Nadar')
     await user.click(within(dialog).getByRole('radio', { name: 'Veces por semana' }))
     await user.selectOptions(within(dialog).getByLabelText('Cuántas veces'), '2')
+    fireEvent.change(within(dialog).getByLabelText('Recordarme a las'), { target: { value: '21:30' } })
+    // Sin notificaciones activas en este dispositivo, el aviso no llegaría
+    expect(await within(dialog).findByText(/Las notificaciones están desactivadas/)).toBeInTheDocument()
     await user.click(within(dialog).getByRole('button', { name: 'Guardar' }))
 
     await waitFor(() =>
@@ -112,6 +116,7 @@ describe('hábitos', () => {
         weekdays: [],
         timesPerWeek: 2,
         archived: false,
+        reminderTime: '21:30',
       }),
     )
   })

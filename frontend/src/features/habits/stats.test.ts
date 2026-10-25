@@ -12,6 +12,7 @@ const habit = (overrides: Partial<Habit>): Habit => ({
   timesPerWeek: null,
   startDate: '2026-09-01',
   archived: false,
+  reminderTime: null,
   checks: [],
   ...overrides,
 })

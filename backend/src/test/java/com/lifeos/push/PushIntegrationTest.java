@@ -9,6 +9,7 @@ import java.security.KeyPair;
 import java.security.Signature;
 import java.security.interfaces.ECPublicKey;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +29,8 @@ import com.jayway.jsonpath.JsonPath;
 import com.lifeos.TestcontainersConfiguration;
 import com.lifeos.support.ApiClient;
 import com.lifeos.support.MutableClock;
+import com.lifeos.agenda.ActivityReminderNotifier;
+import com.lifeos.habits.HabitReminderNotifier;
 import com.lifeos.tasks.ReminderNotifier;
 import com.sun.net.httpserver.HttpServer;
 
@@ -55,6 +58,12 @@ class PushIntegrationTest {
     @Autowired
     ReminderNotifier notifier;
 
+    @Autowired
+    ActivityReminderNotifier activityNotifier;
+
+    @Autowired
+    HabitReminderNotifier habitNotifier;
+
     private final List<Received> received = new CopyOnWriteArrayList<>();
     private HttpServer pushService;
     private volatile int pushStatus = 201;
@@ -65,6 +74,8 @@ class PushIntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         jdbc.update("delete from task");
+        jdbc.update("delete from activity");
+        jdbc.update("delete from habit");
         jdbc.update("delete from push_subscription");
         pushService = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         pushService.createContext("/push", exchange -> {
@@ -183,6 +194,89 @@ class PushIntegrationTest {
         pushStatus = 410;
         notifier.notifyDue();
         assertThat(jdbc.queryForObject("select count(*) from push_subscription", Integer.class)).isZero();
+    }
+
+    @Test
+    void notifiesAgendaActivitiesBeforeTheyStartExceptCancelledOnes() throws Exception {
+        subscribeBrowser();
+        String category = JsonPath.read(api.get("/api/agenda/categories").body(), "$[0].id");
+        HttpResponse<String> created = api.post("/api/agenda/activities", """
+                {"title":"Clase de yoga","categoryId":"%s","startDate":"2026-10-11","startTime":"18:00",
+                 "endDate":"2026-10-11","endTime":"19:00","location":"Gimnasio","reminderMinutesBefore":60,
+                 "recurrence":{"frequency":"DAILY","interval":1}}""".formatted(category));
+        assertThat(created.statusCode()).as(created.body()).isEqualTo(201);
+        assertThat(JsonPath.<Integer>read(created.body(), "$.reminderMinutesBefore")).isEqualTo(60);
+        String id = JsonPath.read(created.body(), "$.id");
+
+        // 12:00 en Madrid: el aviso es a las 17:00
+        assertThat(activityNotifier.notifyDue()).isZero();
+        clock.set(Instant.parse("2026-10-11T15:00:30Z"));
+        assertThat(activityNotifier.notifyDue()).isEqualTo(1);
+        assertThat(activityNotifier.notifyDue()).as("no se repite").isZero();
+        String payload = WebPushDecryptor.decrypt(received.getFirst().body(), browserKeys, authSecret);
+        assertThat(JsonPath.<String>read(payload, "$.title")).isEqualTo("Clase de yoga");
+        assertThat(JsonPath.<String>read(payload, "$.body")).isEqualTo("Hoy a las 18:00 · Gimnasio");
+        assertThat(JsonPath.<String>read(payload, "$.url")).isEqualTo("/agenda?vista=DAY&fecha=2026-10-11");
+
+        // La del día siguiente está cancelada: no se avisa
+        assertThat(api.put("/api/agenda/activities/" + id + "/occurrences/2026-10-12", """
+                {"status":"CANCELLED"}""").statusCode()).isEqualTo(204);
+        clock.set(Instant.parse("2026-10-12T15:00:30Z"));
+        assertThat(activityNotifier.notifyDue()).isZero();
+
+        // Sin hora no hay aviso
+        HttpResponse<String> allDay = api.post("/api/agenda/activities", """
+                {"title":"Excursión","categoryId":"%s","startDate":"2026-10-13","endDate":"2026-10-13",
+                 "reminderMinutesBefore":60}""".formatted(category));
+        assertThat(JsonPath.<Object>read(allDay.body(), "$.reminderMinutesBefore")).isNull();
+    }
+
+    @Test
+    void remindsHabitsOnlyOnDueDaysThatAreNotCheckedYet() throws Exception {
+        subscribeBrowser();
+        // Domingo 11 de octubre; aviso a las 20:00 en Madrid (18:00 UTC)
+        String pending = habit("""
+                {"name":"Leer","color":"#0f766e","frequency":"DAILY","reminderTime":"20:00"}""");
+        String done = habit("""
+                {"name":"Beber agua","color":"#0f766e","frequency":"DAILY","reminderTime":"20:00"}""");
+        api.put("/api/habits/" + done + "/checks/2026-10-11", null);
+        habit("""
+                {"name":"Gimnasio","color":"#0f766e","frequency":"DAILY","weekdays":["MONDAY"],
+                 "reminderTime":"20:00"}""");
+        String weekly = habit("""
+                {"name":"Llamar a casa","color":"#0f766e","frequency":"WEEKLY","timesPerWeek":2,
+                 "reminderTime":"20:00"}""");
+        habit("""
+                {"name":"Sin aviso","color":"#0f766e","frequency":"DAILY"}""");
+        assertThat(JsonPath.<String>read(api.get("/api/habits?from=2026-10-05&to=2026-10-11").body(),
+                "$[0].reminderTime")).isEqualTo("20:00:00");
+        // La semana empezó antes de crear el hábito: marcar un día cuenta igual
+        jdbc.update("update habit set start_date = '2026-10-05'");
+        api.put("/api/habits/" + weekly + "/checks/2026-10-06", null);
+
+        assertThat(habitNotifier.notifyDue()).isZero();
+        clock.set(Instant.parse("2026-10-11T18:00:30Z"));
+        assertThat(habitNotifier.notifyDue()).isEqualTo(2);
+        assertThat(habitNotifier.notifyDue()).as("una vez al día").isZero();
+        List<String> payloads = new ArrayList<>();
+        for (var r : received) {
+            payloads.add(WebPushDecryptor.decrypt(r.body(), browserKeys, authSecret));
+        }
+        assertThat(payloads).anySatisfy(p -> {
+            assertThat(JsonPath.<String>read(p, "$.title")).isEqualTo("Leer");
+            assertThat(JsonPath.<String>read(p, "$.body")).isEqualTo("Aún no lo has marcado hoy.");
+        });
+        assertThat(payloads).anySatisfy(p -> {
+            assertThat(JsonPath.<String>read(p, "$.title")).isEqualTo("Llamar a casa");
+            assertThat(JsonPath.<String>read(p, "$.body")).isEqualTo("Esta semana llevas 1 de 2.");
+        });
+        assertThat(pending).isNotBlank();
+    }
+
+    private String habit(String json) {
+        HttpResponse<String> response = api.post("/api/habits", json);
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(201);
+        return JsonPath.read(response.body(), "$.id");
     }
 
     private void subscribeBrowser() {

@@ -7,6 +7,7 @@ import { useDateFormat } from '../../lib/useRelativeDate'
 import { Field } from '../../ui/Field'
 import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast-context'
+import { PushOffHint } from '../notifications/ReminderSelect'
 import { CATEGORY_COLORS, WEEKDAYS, type Weekday } from '../tasks/api'
 import { useDeleteHabit, useSaveHabit, type Habit, type HabitFrequency } from './api'
 
@@ -27,6 +28,7 @@ export function HabitEditor({ habit, onClose }: HabitEditorProps) {
   const [weekdays, setWeekdays] = useState<Weekday[]>(habit?.weekdays ?? [])
   const [timesPerWeek, setTimesPerWeek] = useState(habit?.timesPerWeek ?? 3)
   const [archived, setArchived] = useState(habit?.archived ?? false)
+  const [reminderTime, setReminderTime] = useState(habit?.reminderTime?.slice(0, 5) ?? '')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const save = useSaveHabit()
   const remove = useDeleteHabit()
@@ -44,6 +46,7 @@ export function HabitEditor({ habit, onClose }: HabitEditorProps) {
         weekdays: frequency === 'DAILY' ? WEEKDAYS.filter((d) => weekdays.includes(d)) : [],
         timesPerWeek: frequency === 'WEEKLY' ? timesPerWeek : null,
         archived,
+        reminderTime: reminderTime || null,
       },
       {
         onSuccess: () => {
@@ -156,6 +159,11 @@ export function HabitEditor({ habit, onClose }: HabitEditorProps) {
             </select>
           </Field>
         )}
+        <Field label={t('habits.form.reminder')} id="habit-reminder" error={serverErrors.reminderTime}>
+          <input id="habit-reminder" type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} />
+        </Field>
+        <p className="muted small">{t('habits.form.reminderHelp')}</p>
+        {reminderTime && <PushOffHint />}
         {habit && (
           <label className="checkbox-row">
             <input type="checkbox" checked={archived} onChange={(e) => setArchived(e.target.checked)} />

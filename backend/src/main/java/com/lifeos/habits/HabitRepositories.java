@@ -15,6 +15,8 @@ interface HabitRepository extends JpaRepository<Habit, UUID> {
 
     List<Habit> findByUserIdOrderByCreatedAtAsc(UUID userId);
 
+    List<Habit> findByArchivedFalseAndReminderTimeNotNull();
+
     @Query("""
             select count(h) > 0 from Habit h
             where h.userId = :userId and lower(h.name) = lower(:name) and h.id <> :excludeId

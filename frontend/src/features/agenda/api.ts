@@ -47,6 +47,8 @@ export interface Activity {
   description: string | null
   location: string | null
   recurrence: RecurrenceRule | null
+  /** Minutos antes de la hora de inicio; null = sin aviso. */
+  reminderMinutesBefore: number | null
 }
 
 export interface ActivityInput {
@@ -59,6 +61,8 @@ export interface ActivityInput {
   description: string | null
   location: string | null
   recurrence: RecurrenceRule | null
+  /** Minutos antes de la hora de inicio; null = sin aviso. */
+  reminderMinutesBefore: number | null
 }
 
 export interface CategoryInput {

@@ -745,6 +745,8 @@ const es = {
       timesPerWeek: 'Cuántas veces',
       archived: 'Archivado',
       archivedHelp: 'Deja de aparecer en Hoy y en la semana, pero conserva el historial.',
+      reminder: 'Recordarme a las',
+      reminderHelp: 'Opcional. Solo te avisamos los días que toca y si aún no lo has marcado.',
     },
     history: {
       title: 'Cómo va',
@@ -1188,7 +1190,7 @@ const es = {
     notificationsInsecure: 'Las notificaciones necesitan que la app se sirva por HTTPS.',
     notificationsDenied:
       'Has bloqueado las notificaciones para LifeOS. Permítelas en los ajustes del navegador o del sistema y vuelve aquí.',
-    notificationsOff: 'Recibe los avisos de tus tareas y recordatorios en este dispositivo.',
+    notificationsOff: 'Recibe en este dispositivo los avisos de tus tareas, recordatorios, agenda y hábitos.',
     notificationsOn: 'Las notificaciones están activadas en este dispositivo.',
     notificationsEnable: 'Activar notificaciones',
     notificationsDisable: 'Desactivar',

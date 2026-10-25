@@ -45,6 +45,15 @@ interface ActivityRepository extends JpaRepository<Activity, UUID> {
               and (a.recurrenceFrequency is not null or a.endDate >= :from)
             """)
     List<Activity> findCandidates(UUID userId, LocalDate from, LocalDate to);
+
+    /** Actividades con aviso que aún pueden tener apariciones desde {@code from}. */
+    @Query("""
+            select a from Activity a
+            where a.reminderMinutesBefore is not null
+              and (a.recurrenceFrequency is not null or a.startDate >= :from)
+              and (a.recurrenceUntil is null or a.recurrenceUntil >= :from)
+            """)
+    List<Activity> findWithReminderFrom(LocalDate from);
 }
 
 interface ActivityOccurrenceRepository extends JpaRepository<ActivityOccurrence, ActivityOccurrence.Key> {

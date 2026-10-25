@@ -5,6 +5,8 @@ import java.time.LocalTime;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -53,18 +55,21 @@ public final class AgendaDtos {
             LocalTime endTime,
             @Size(max = 2000, message = "{agenda.text.too-long}") String description,
             @Size(max = 200, message = "{agenda.text.too-long}") String location,
-            @Valid RecurrenceDto recurrence) {
+            @Valid RecurrenceDto recurrence,
+            @Min(value = 0, message = "{task.notification.invalid}")
+            @Max(value = 10080, message = "{task.notification.invalid}") Integer reminderMinutesBefore) {
     }
 
     public record ActivityResponse(UUID id, String title, CategoryRef category, LocalDate startDate,
             LocalTime startTime, LocalDate endDate, LocalTime endTime, String description, String location,
-            RecurrenceDto recurrence) {
+            RecurrenceDto recurrence, Integer reminderMinutesBefore) {
 
         static ActivityResponse from(Activity a) {
             Recurrence r = a.recurrence();
             return new ActivityResponse(a.getId(), a.getTitle(), CategoryRef.from(a.getCategory()), a.getStartDate(),
                     a.getStartTime(), a.getEndDate(), a.getEndTime(), a.getDescription(), a.getLocation(),
-                    r == null ? null : new RecurrenceDto(r.frequency(), r.interval(), r.weekdays(), r.until()));
+                    r == null ? null : new RecurrenceDto(r.frequency(), r.interval(), r.weekdays(), r.until()),
+                    a.getReminderMinutesBefore());
         }
     }
 

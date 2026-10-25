@@ -17,6 +17,8 @@ export interface Habit {
   timesPerWeek: number | null
   startDate: string
   archived: boolean
+  /** Hora del aviso (HH:mm:ss) los días que toca; null = sin aviso. */
+  reminderTime: string | null
   checks: string[]
 }
 
@@ -27,6 +29,7 @@ export interface HabitInput {
   weekdays: Weekday[]
   timesPerWeek: number | null
   archived: boolean
+  reminderTime: string | null
 }
 
 const keys = {

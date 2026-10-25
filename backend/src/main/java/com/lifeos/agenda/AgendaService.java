@@ -209,7 +209,8 @@ public class AgendaService {
         Recurrence recurrence = r == null ? null
                 : new Recurrence(r.frequency(), r.interval(), r.weekdays(), startDate, r.until());
         activity.update(request.title().strip(), category, startDate, startTime, endDate, endTime,
-                blankToNull(request.description()), blankToNull(request.location()), recurrence, clock.instant());
+                blankToNull(request.description()), blankToNull(request.location()), recurrence,
+                request.reminderMinutesBefore(), clock.instant());
     }
 
     private void checkCategoryName(UUID userId, String name, UUID excludeId) {

@@ -17,7 +17,7 @@ describe('autenticación', () => {
     expect(router.state.location.pathname).toBe('/login')
   })
 
-  it('inicia sesión y vuelve a la página que se pedía', async () => {
+  it('inicia sesión y vuelve a la página que se pedía, con sus parámetros', async () => {
     let loggedIn = false
     mockFetch({
       'GET /api/auth/me': () => (loggedIn ? json(testUser) : json({}, 401)),
@@ -28,7 +28,8 @@ describe('autenticación', () => {
         return json(testUser)
       },
     })
-    const { router } = renderApp('/ajustes')
+    // Los atajos del icono abren pantallas con parámetros (por ejemplo, un formulario nuevo)
+    const { router } = renderApp('/ajustes?borrar=1')
     const user = userEvent.setup()
 
     await user.type(await screen.findByLabelText('Correo electrónico'), ' jorge@example.com ')
@@ -37,7 +38,8 @@ describe('autenticación', () => {
 
     expect(await screen.findByRole('heading', { name: 'Ajustes' })).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/ajustes')
-    expect(screen.getByText('jorge@example.com')).toBeInTheDocument()
+    expect(router.state.location.search).toBe('?borrar=1')
+    expect(await screen.findByRole('dialog', { name: 'Borrar datos' })).toBeInTheDocument()
   })
 
   it('muestra el error del servidor si las credenciales no son válidas', async () => {

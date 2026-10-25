@@ -3087,3 +3087,9 @@ a.icon-button {
     display: none;
   }
 }
+
+.delete-scopes {
+  margin: 0;
+  padding: 0;
+  border: none;
+}

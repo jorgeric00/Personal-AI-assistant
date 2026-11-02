@@ -3,6 +3,7 @@ import type { SqlJsStatic } from 'sql.js'
 import { todayIn } from './dates'
 import { LocalDb } from './db'
 import { accountRoutes } from './modules/account'
+import { habitRoutes } from './modules/habits'
 import { noteRoutes, purgeExpiredTrash } from './modules/notes'
 import { taskRoutes } from './modules/tasks'
 import { LocalRouter, type LocalContext, type LocalResponse } from './router'
@@ -16,7 +17,7 @@ export interface LocalApiOptions {
   uuid?: () => string
 }
 
-const router = new LocalRouter([...accountRoutes, ...taskRoutes, ...noteRoutes])
+const router = new LocalRouter([...accountRoutes, ...taskRoutes, ...noteRoutes, ...habitRoutes])
 
 /**
  * API local: responde a las mismas rutas que el servidor usando la base de datos del móvil. Las peticiones se atienden

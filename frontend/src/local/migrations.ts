@@ -80,5 +80,28 @@ export const MIGRATIONS: string[] = [
   );
 
   CREATE INDEX note_task_task_idx ON note_task (task_id);
+  `,  `
+  -- Hábitos. DAILY: todos los días o solo los indicados en weekdays (MONDAY,…); WEEKLY: unas veces por semana.
+  CREATE TABLE habit (
+      id             TEXT PRIMARY KEY,
+      name           TEXT NOT NULL,
+      color          TEXT NOT NULL,
+      frequency      TEXT NOT NULL CHECK (frequency IN ('DAILY', 'WEEKLY')),
+      weekdays       TEXT,
+      times_per_week INTEGER CHECK (times_per_week BETWEEN 1 AND 7),
+      start_date     TEXT NOT NULL,
+      archived       INTEGER NOT NULL DEFAULT 0,
+      created_at     TEXT NOT NULL,
+      updated_at     TEXT NOT NULL,
+      CHECK (frequency <> 'WEEKLY' OR times_per_week IS NOT NULL)
+  );
+
+  -- Días en que se cumplió cada hábito (como mucho una marca por día).
+  CREATE TABLE habit_check (
+      habit_id   TEXT NOT NULL REFERENCES habit (id) ON DELETE CASCADE,
+      date       TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (habit_id, date)
+  );
   `,
 ]

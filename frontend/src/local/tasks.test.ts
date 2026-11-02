@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { LocalError } from './errors'
-import { openTestApi } from './testing'
+import { failure, openTestApi } from './testing'
 
 const task = (overrides: Record<string, unknown> = {}) => ({
   kind: 'TASK',
@@ -16,16 +15,6 @@ const task = (overrides: Record<string, unknown> = {}) => ({
   reminderMinutesBefore: null,
   ...overrides,
 })
-
-async function failure(promise: Promise<unknown>): Promise<LocalError> {
-  try {
-    await promise
-  } catch (error) {
-    if (error instanceof LocalError) return error
-    throw error
-  }
-  throw new Error('no ha fallado')
-}
 
 describe('tareas en la base de datos local', () => {
   it('crea tareas, las separa en hoy y próximas y marca las atrasadas', async () => {

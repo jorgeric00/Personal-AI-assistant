@@ -7,7 +7,7 @@ export const LOCAL_MODE = import.meta.env.VITE_LOCAL === 'true'
 export type AppModule = 'agenda' | 'tasks' | 'notes' | 'finance' | 'fitness' | 'habits' | 'goals' | 'reports'
 
 /** Módulos que ya funcionan sin servidor. Los demás no se muestran en la app hasta estar completos. */
-const LOCAL_MODULES: readonly AppModule[] = ['tasks']
+const LOCAL_MODULES: readonly AppModule[] = ['tasks', 'notes']
 
 export function moduleEnabled(module: AppModule): boolean {
   return !LOCAL_MODE || LOCAL_MODULES.includes(module)

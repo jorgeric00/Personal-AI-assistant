@@ -49,5 +49,36 @@ export const MIGRATIONS: string[] = [
       completed_at    TEXT NOT NULL,
       PRIMARY KEY (task_id, occurrence_date)
   );
+  `,  `
+  -- Notas. search_text guarda título, contenido y etiquetas en minúsculas y sin tildes para buscar.
+  CREATE TABLE note (
+      id          TEXT PRIMARY KEY,
+      title       TEXT NOT NULL DEFAULT '',
+      body        TEXT NOT NULL DEFAULT '',
+      state       TEXT NOT NULL CHECK (state IN ('ACTIVE', 'ARCHIVED', 'TRASHED')),
+      pinned      INTEGER NOT NULL DEFAULT 0,
+      favorite    INTEGER NOT NULL DEFAULT 0,
+      search_text TEXT NOT NULL DEFAULT '',
+      trashed_at  TEXT,
+      created_at  TEXT NOT NULL,
+      updated_at  TEXT NOT NULL,
+      CHECK ((state = 'TRASHED') = (trashed_at IS NOT NULL))
+  );
+
+  CREATE TABLE note_tag (
+      note_id TEXT NOT NULL REFERENCES note (id) ON DELETE CASCADE,
+      name    TEXT NOT NULL,
+      PRIMARY KEY (note_id, name)
+  );
+
+  -- Tareas relacionadas con una nota, en el orden en que se eligieron.
+  CREATE TABLE note_task (
+      note_id  TEXT NOT NULL REFERENCES note (id) ON DELETE CASCADE,
+      task_id  TEXT NOT NULL REFERENCES task (id) ON DELETE CASCADE,
+      position INTEGER NOT NULL,
+      PRIMARY KEY (note_id, task_id)
+  );
+
+  CREATE INDEX note_task_task_idx ON note_task (task_id);
   `,
 ]

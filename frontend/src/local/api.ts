@@ -3,6 +3,7 @@ import type { SqlJsStatic } from 'sql.js'
 import { todayIn } from './dates'
 import { LocalDb } from './db'
 import { accountRoutes } from './modules/account'
+import { noteRoutes, purgeExpiredTrash } from './modules/notes'
 import { taskRoutes } from './modules/tasks'
 import { LocalRouter, type LocalContext, type LocalResponse } from './router'
 import type { DatabaseStorage } from './storage'
@@ -15,7 +16,7 @@ export interface LocalApiOptions {
   uuid?: () => string
 }
 
-const router = new LocalRouter([...accountRoutes, ...taskRoutes])
+const router = new LocalRouter([...accountRoutes, ...taskRoutes, ...noteRoutes])
 
 /**
  * API local: responde a las mismas rutas que el servidor usando la base de datos del móvil. Las peticiones se atienden
@@ -44,6 +45,8 @@ export class LocalApi {
       uuid: options.uuid ?? (() => crypto.randomUUID()),
     }
     const api = new LocalApi(ctx, options.storage)
+    // Mantenimiento que en el servidor hacen tareas programadas.
+    db.transaction(() => purgeExpiredTrash(ctx))
     // Guarda ya la base recién creada o migrada.
     await options.storage.save(db.export())
     return api

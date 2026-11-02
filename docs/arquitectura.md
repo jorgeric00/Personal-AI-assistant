@@ -116,7 +116,8 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 
 - **Despliegue.** Para usarla fuera de casa el servidor tiene que ser accesible desde el móvil y servirse por
   HTTPS (necesario para instalar la PWA, para las notificaciones y para la cookie `Secure`).
-  Opciones: un VPS pequeño con Caddy, o un equipo en casa con Tailscale. Pendiente de decidir.
+  `docker-compose.https.yml` añade Caddy delante de la app con certificado automático para publicarla en un VPS
+  (guía en [despliegue.md](despliegue.md)). Otra opción posible es un equipo en casa con Tailscale.
 - **Notificaciones en iOS.** Solo funcionan con la app añadida a la pantalla de inicio (iOS 16.4 o posterior);
   la pantalla de Ajustes lo explica cuando detecta un iPhone sin instalar. Los avisos se envían por los
   servicios push de Apple, Google o Mozilla, que solo ven el mensaje cifrado.

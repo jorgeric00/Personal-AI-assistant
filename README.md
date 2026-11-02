@@ -34,6 +34,8 @@ Para parar: `docker compose down` (los datos se conservan en el volumen `db-data
 Cada día se guarda una copia de la base de datos en `backups/`. Cómo restaurarla y cómo descargar tus datos:
 [docs/copias-de-seguridad.md](docs/copias-de-seguridad.md).
 
+Para usarla en el móvil hay que publicarla con HTTPS en un servidor: [docs/despliegue.md](docs/despliegue.md).
+
 ## Desarrollo
 
 Requisitos: Java 21, Node 22 y Docker.

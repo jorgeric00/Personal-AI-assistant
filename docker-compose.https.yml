@@ -1,0 +1,26 @@
+# Añade HTTPS con Caddy delante de la app para publicarla en un servidor (ver docs/despliegue.md).
+# Uso: docker compose -f docker-compose.yml -f docker-compose.https.yml up -d --build
+services:
+  web:
+    # Solo se entra por Caddy: la app deja de escuchar en un puerto propio.
+    ports: !reset []
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+    environment:
+      LIFEOS_DOMAIN: ${LIFEOS_DOMAIN:?Define LIFEOS_DOMAIN en .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+  caddy-config:

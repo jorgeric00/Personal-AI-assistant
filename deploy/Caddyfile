@@ -1,0 +1,7 @@
+# HTTPS para LifeOS con certificado automático de Let's Encrypt (ver docs/despliegue.md).
+{$LIFEOS_DOMAIN} {
+	encode zstd gzip
+	# Caddy pone X-Forwarded-Proto/For; nginx los pasa al backend para las cookies Secure y el límite de intentos.
+	reverse_proxy web:8080
+	header Strict-Transport-Security "max-age=31536000"
+}

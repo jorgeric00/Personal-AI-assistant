@@ -3,6 +3,7 @@ import type { SqlJsStatic } from 'sql.js'
 import { todayIn } from './dates'
 import { LocalDb } from './db'
 import { accountRoutes } from './modules/account'
+import { agendaRoutes } from './modules/agenda'
 import { habitRoutes } from './modules/habits'
 import { noteRoutes, purgeExpiredTrash } from './modules/notes'
 import { taskRoutes } from './modules/tasks'
@@ -17,7 +18,7 @@ export interface LocalApiOptions {
   uuid?: () => string
 }
 
-const router = new LocalRouter([...accountRoutes, ...taskRoutes, ...noteRoutes, ...habitRoutes])
+const router = new LocalRouter([...accountRoutes, ...taskRoutes, ...noteRoutes, ...habitRoutes, ...agendaRoutes])
 
 /**
  * API local: responde a las mismas rutas que el servidor usando la base de datos del móvil. Las peticiones se atienden
@@ -55,8 +56,10 @@ export class LocalApi {
 
   request(method: string, path: string, body?: unknown): Promise<LocalResponse> {
     const run = async () => {
+      const writes = this.ctx.db.writeCount
       const response = this.handle(method, path, body)
-      if (method !== 'GET') await this.storage.save(this.ctx.db.export())
+      // Algunas consultas también escriben (las categorías iniciales de la agenda, por ejemplo).
+      if (method !== 'GET' || this.ctx.db.writeCount !== writes) await this.storage.save(this.ctx.db.export())
       return response
     }
     const result = this.queue.then(run, run)

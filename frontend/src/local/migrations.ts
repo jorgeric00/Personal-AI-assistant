@@ -103,5 +103,43 @@ export const MIGRATIONS: string[] = [
       created_at TEXT NOT NULL,
       PRIMARY KEY (habit_id, date)
   );
+  `,  `
+  -- Agenda. Una actividad repetida es una sola fila; la regla se ancla en start_date.
+  CREATE TABLE activity_category (
+      id         TEXT PRIMARY KEY,
+      name       TEXT NOT NULL,
+      color      TEXT NOT NULL,
+      archived   INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL
+  );
+
+  CREATE TABLE activity (
+      id                   TEXT PRIMARY KEY,
+      title                TEXT NOT NULL,
+      category_id          TEXT NOT NULL REFERENCES activity_category (id),
+      start_date           TEXT NOT NULL,
+      start_time           TEXT,
+      end_date             TEXT NOT NULL,
+      end_time             TEXT,
+      description          TEXT,
+      location             TEXT,
+      recurrence_frequency TEXT CHECK (recurrence_frequency IN ('DAILY', 'WEEKLY', 'MONTHLY')),
+      recurrence_interval  INTEGER,
+      recurrence_weekdays  TEXT,
+      recurrence_until     TEXT,
+      created_at           TEXT NOT NULL,
+      updated_at           TEXT NOT NULL
+  );
+
+  CREATE INDEX activity_start_idx ON activity (start_date);
+
+  -- Estado de una aparición concreta; sin fila, está planificada.
+  CREATE TABLE activity_occurrence (
+      activity_id TEXT NOT NULL REFERENCES activity (id) ON DELETE CASCADE,
+      date        TEXT NOT NULL,
+      status      TEXT NOT NULL CHECK (status IN ('CONFIRMED', 'DONE', 'MISSED', 'CANCELLED')),
+      updated_at  TEXT NOT NULL,
+      PRIMARY KEY (activity_id, date)
+  );
   `,
 ]

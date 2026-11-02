@@ -8,13 +8,14 @@ Capacitor. Los datos están en una base de datos SQLite dentro del almacenamient
 
 | Parte | En la app |
 | --- | --- |
-| Hoy | ✅ Saludo, tareas de hoy, próximos recordatorios, hábitos de hoy y notas fijadas |
+| Hoy | ✅ Saludo, tareas y agenda de hoy, próximos recordatorios, hábitos de hoy y notas fijadas |
 | Tareas y recordatorios | ✅ Todo: repetición, categorías, completar, posponer, calendario |
 | Notas | ✅ Todo: etiquetas, búsqueda, fijar, favoritas, archivo, papelera (se vacía a los 30 días) y tareas relacionadas |
+| Agenda | ✅ Actividades con categorías, repetición, estados, solapes, vistas de día, semana y mes. Los entrenos aparecerán cuando el entreno funcione en la app |
 | Hábitos | ✅ Todo: diarios o unas veces por semana, marcar días, rachas y estadísticas |
 | Ajustes | ✅ Nombre, idioma y apariencia |
 | Avisos (notificaciones) | ❌ Aún no: el campo «Aviso» no se muestra en la app hasta que funcione |
-| Agenda, finanzas, entreno, alimentación, objetivos e informes | ❌ Aún no: no aparecen en la app |
+| Finanzas, entreno, alimentación, objetivos e informes | ❌ Aún no: no aparecen en la app |
 | Copia de seguridad (exportar e importar) | ❌ Aún no |
 
 Lo que todavía no está no aparece en la app, para no dejar nada a medias. Se irá añadiendo por partes.

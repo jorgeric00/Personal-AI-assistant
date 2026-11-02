@@ -22,12 +22,17 @@ function deviceLocale(): string {
   return LOCALES.includes(language) ? language : 'es'
 }
 
+/** Idioma de la app: el elegido en Ajustes o, si no, el del móvil. */
+export function currentLocale(ctx: LocalContext): string {
+  return setting(ctx, 'locale') ?? deviceLocale()
+}
+
 function me(ctx: LocalContext) {
   return {
     id: 'local',
     email: '',
     displayName: setting(ctx, 'displayName') ?? '',
-    locale: setting(ctx, 'locale') ?? deviceLocale(),
+    locale: currentLocale(ctx),
     timezone: ctx.timeZone,
   }
 }

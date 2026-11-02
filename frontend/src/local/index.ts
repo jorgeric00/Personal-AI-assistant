@@ -5,6 +5,7 @@ import i18n from '../i18n'
 import { LocalApi } from './api'
 import { LocalError } from './errors'
 import { MESSAGES } from './messages'
+import { onReminderOpened, syncReminders } from './notifications'
 import { indexedDbStorage } from './storage'
 
 /** Punto de entrada de la API local en la app. Se carga aparte para que la web no descargue SQLite. */
@@ -53,5 +54,26 @@ export function toProblem(error: unknown): LocalProblem {
 }
 
 export async function localRequest(method: string, path: string, body?: unknown) {
-  return (await openApi()).request(method, path, body)
+  const response = await (await openApi()).request(method, path, body)
+  if (method !== 'GET') scheduleReminderSync()
+  return response
+}
+
+let syncTimer: ReturnType<typeof setTimeout> | undefined
+
+/** Vuelve a programar los avisos del móvil poco después del último cambio (agrupa los cambios seguidos). */
+export function scheduleReminderSync(delay = 400): void {
+  clearTimeout(syncTimer)
+  syncTimer = setTimeout(() => {
+    void openApi()
+      .then((local) => local.reminders())
+      .then(syncReminders)
+      .catch((error: unknown) => console.error('No se han podido programar los avisos', error))
+  }, delay)
+}
+
+/** Arranque de la app: programa los avisos pendientes y abre la pantalla de un aviso al tocarlo. */
+export function startReminders(open: (url: string) => void): void {
+  onReminderOpened(open)
+  scheduleReminderSync(0)
 }

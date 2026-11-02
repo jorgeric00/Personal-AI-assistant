@@ -14,7 +14,8 @@ Capacitor. Los datos están en una base de datos SQLite dentro del almacenamient
 | Agenda | ✅ Actividades con categorías, repetición, estados, solapes, vistas de día, semana y mes. Los entrenos aparecerán cuando el entreno funcione en la app |
 | Hábitos | ✅ Todo: diarios o unas veces por semana, marcar días, rachas y estadísticas |
 | Ajustes | ✅ Nombre, idioma y apariencia |
-| Avisos (notificaciones) | ❌ Aún no: el campo «Aviso» no se muestra en la app hasta que funcione |
+| Avisos de tareas y recordatorios | ✅ Los programa el propio móvil, sin internet (ver abajo) |
+| Avisos de agenda y hábitos | ❌ Aún no (tampoco están en la web hasta fusionar #21) |
 | Finanzas, entreno, alimentación, objetivos e informes | ❌ Aún no: no aparecen en la app |
 | Copia de seguridad (exportar e importar) | ❌ Aún no |
 
@@ -23,6 +24,19 @@ Lo que todavía no está no aparece en la app, para no dejar nada a medias. Se i
 > **Importante mientras no haya copia de seguridad:** si desinstalas la app o borras sus datos desde los ajustes de
 > Android, se pierde todo. La copia automática de Android en la nube de Google está desactivada a propósito
 > (`allowBackup="false"`), porque subiría tus datos personales a un servicio externo.
+
+## Avisos
+
+Los avisos de las tareas y recordatorios con «Aviso» los programa el propio móvil con notificaciones locales: no
+pasan por ningún servidor y suenan aunque no haya internet.
+
+- La primera vez que guardes algo con aviso, Android pedirá permiso para mostrar notificaciones. También se puede
+  activar en **Ajustes → Notificaciones** de LifeOS.
+- En Android 12 o posterior, el sistema puede retrasar los avisos unos minutos si LifeOS no tiene permiso de
+  «Alarmas y recordatorios». Ajustes de LifeOS muestra un botón para concederlo cuando falta.
+- Cada vez que abres la app o cambias algo se programan los avisos de los próximos 30 días (como mucho 200). Si
+  pasas más de un mes sin abrir la app, los avisos posteriores no sonarán hasta que la vuelvas a abrir.
+- Al tocar un aviso se abre la lista de tareas.
 
 ## Instalarla en el móvil
 

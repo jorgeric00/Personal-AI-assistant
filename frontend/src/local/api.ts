@@ -6,6 +6,7 @@ import { accountRoutes } from './modules/account'
 import { agendaRoutes } from './modules/agenda'
 import { habitRoutes } from './modules/habits'
 import { noteRoutes, purgeExpiredTrash } from './modules/notes'
+import { upcomingReminders, type ScheduledReminder } from './modules/reminders'
 import { taskRoutes } from './modules/tasks'
 import { LocalRouter, type LocalContext, type LocalResponse } from './router'
 import type { DatabaseStorage } from './storage'
@@ -62,6 +63,14 @@ export class LocalApi {
       if (method !== 'GET' || this.ctx.db.writeCount !== writes) await this.storage.save(this.ctx.db.export())
       return response
     }
+    const result = this.queue.then(run, run)
+    this.queue = result.catch(() => undefined)
+    return result
+  }
+
+  /** Avisos que hay que programar en el móvil, calculados con los datos guardados. */
+  reminders(): Promise<ScheduledReminder[]> {
+    const run = async () => upcomingReminders(this.ctx)
     const result = this.queue.then(run, run)
     this.queue = result.catch(() => undefined)
     return result

@@ -10,6 +10,7 @@ import { Sheet } from '../../ui/Sheet'
 import { LOCAL_MODE, moduleEnabled } from '../../platform'
 import { RelatedNotes } from '../notes/RelatedNotes'
 import { useToast } from '../../ui/toast-context'
+import { useReminderStatus } from '../notifications/localReminders'
 import { usePushState } from '../notifications/push'
 import {
   CATEGORY_COLORS,
@@ -92,6 +93,7 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
   const categories = useCategories()
   const createCategory = useCreateCategory()
   const push = usePushState()
+  const reminders = useReminderStatus()
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((f) => ({ ...f, [key]: value }))
 
@@ -222,29 +224,24 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
           </Field>
         </div>
 
-        {/* En la app los avisos llegarán con las notificaciones locales; hasta entonces no se ofrecen. */}
-        {!LOCAL_MODE && (
-          <>
-            <Field label={t('tasks.form.notification')} id="task-notify" error={fieldError('reminderMinutesBefore')}>
-              <select
-                id="task-notify"
-                value={form.dueTime ? form.notify : ''}
-                disabled={!form.dueTime}
-                onChange={(e) => set('notify', e.target.value)}
-              >
-                <option value="">{t('tasks.notify.none')}</option>
-                {NOTIFY_OPTIONS.map((minutes) => (
-                  <option key={minutes} value={minutes}>
-                    {notifyLabel(minutes, t)}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            {!form.dueTime && <p className="hint">{t('tasks.form.notificationNeedsTime')}</p>}
-            {form.dueTime && form.notify !== '' && push.status !== 'on' && push.status !== 'loading' && (
-              <p className="hint">{t('tasks.form.notificationsOff')}</p>
-            )}
-          </>
+        <Field label={t('tasks.form.notification')} id="task-notify" error={fieldError('reminderMinutesBefore')}>
+          <select
+            id="task-notify"
+            value={form.dueTime ? form.notify : ''}
+            disabled={!form.dueTime}
+            onChange={(e) => set('notify', e.target.value)}
+          >
+            <option value="">{t('tasks.notify.none')}</option>
+            {NOTIFY_OPTIONS.map((minutes) => (
+              <option key={minutes} value={minutes}>
+                {notifyLabel(minutes, t)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        {!form.dueTime && <p className="hint">{t('tasks.form.notificationNeedsTime')}</p>}
+        {form.dueTime && form.notify !== '' && (
+          <NotificationHint pushStatus={push.status} reminderPermission={reminders.data?.permission} />
         )}
 
         <RecurrenceFields
@@ -422,4 +419,16 @@ function notifyLabel(minutes: number, t: TFunction) {
   if (minutes % 1440 === 0) return t('tasks.notify.days', { count: minutes / 1440 })
   if (minutes % 60 === 0) return t('tasks.notify.hours', { count: minutes / 60 })
   return t('tasks.notify.minutes', { count: minutes })
+}
+
+/** Aviso de que la notificación no llegará: en la web, sin push; en la app, sin permiso del móvil. */
+function NotificationHint({ pushStatus, reminderPermission }: { pushStatus: string; reminderPermission?: string }) {
+  const { t } = useTranslation()
+  if (LOCAL_MODE) {
+    if (reminderPermission === 'unsupported') return <p className="hint">{t('tasks.form.notificationsAppOnly')}</p>
+    if (reminderPermission === 'denied') return <p className="hint">{t('tasks.form.notificationsDeniedApp')}</p>
+    return null
+  }
+  if (pushStatus === 'on' || pushStatus === 'loading') return null
+  return <p className="hint">{t('tasks.form.notificationsOff')}</p>
 }

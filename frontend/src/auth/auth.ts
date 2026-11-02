@@ -57,6 +57,16 @@ export function useUpdateLanguage() {
   })
 }
 
+/** Solo en la app: el nombre del saludo se guarda en el móvil. */
+export function useUpdateDisplayName() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (displayName: string) =>
+      apiFetch<CurrentUser>('/api/me/preferences', { method: 'PATCH', body: { displayName } }),
+    onSuccess: (user) => queryClient.setQueryData(currentUserKey, user),
+  })
+}
+
 export function useLogout() {
   const queryClient = useQueryClient()
   return useMutation({

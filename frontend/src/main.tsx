@@ -9,11 +9,13 @@ import './i18n'
 import { routes } from './app/router'
 import { ToastProvider } from './ui/Toast'
 import './index.css'
+import { LOCAL_MODE } from './platform'
 
 const queryClient = createQueryClient()
 const router = createBrowserRouter(routes)
 
-registerSW({ immediate: true })
+// En la app Android los ficheros ya están en el móvil: no hace falta service worker.
+if (!LOCAL_MODE) registerSW({ immediate: true })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

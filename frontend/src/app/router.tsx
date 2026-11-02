@@ -14,6 +14,12 @@ import { ReportsPage } from '../features/reports/ReportsPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { TasksPage } from '../features/tasks/TasksPage'
 import { AppLayout } from '../layout/AppLayout'
+import { moduleEnabled, type AppModule } from '../platform'
+
+/** Las pantallas de módulos que aún no funcionan en la app llevan a Hoy (ruta comodín). */
+function available(list: (RouteObject & { module: AppModule })[]): RouteObject[] {
+  return list.filter((r) => moduleEnabled(r.module)).map(({ path, element }) => ({ path, element }))
+}
 
 export const routes: RouteObject[] = [
   { path: '/login', element: <LoginPage /> },
@@ -24,15 +30,17 @@ export const routes: RouteObject[] = [
         element: <AppLayout />,
         children: [
           { index: true, element: <DashboardPage /> },
-          { path: 'agenda', element: <AgendaPage /> },
-          { path: 'tareas', element: <TasksPage /> },
-          { path: 'finanzas', element: <FinancePage /> },
-          { path: 'notas', element: <NotesPage /> },
-          { path: 'entreno', element: <FitnessPage /> },
-          { path: 'entreno/sesion/:id', element: <WorkoutPage /> },
-          { path: 'habitos', element: <HabitsPage /> },
-          { path: 'objetivos', element: <GoalsPage /> },
-          { path: 'informes', element: <ReportsPage /> },
+          ...available([
+            { path: 'agenda', element: <AgendaPage />, module: 'agenda' },
+            { path: 'tareas', element: <TasksPage />, module: 'tasks' },
+            { path: 'finanzas', element: <FinancePage />, module: 'finance' },
+            { path: 'notas', element: <NotesPage />, module: 'notes' },
+            { path: 'entreno', element: <FitnessPage />, module: 'fitness' },
+            { path: 'entreno/sesion/:id', element: <WorkoutPage />, module: 'fitness' },
+            { path: 'habitos', element: <HabitsPage />, module: 'habits' },
+            { path: 'objetivos', element: <GoalsPage />, module: 'goals' },
+            { path: 'informes', element: <ReportsPage />, module: 'reports' },
+          ]),
           { path: 'ajustes', element: <SettingsPage /> },
         ],
       },

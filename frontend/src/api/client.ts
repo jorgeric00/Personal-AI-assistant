@@ -63,6 +63,8 @@ export interface RequestOptions {
 }
 
 export async function apiFetch<T>(path: string, { method = 'GET', body }: RequestOptions = {}): Promise<T> {
+  // Comparación literal para que la web elimine al compilar todo el código local (SQLite incluido).
+  if (import.meta.env.VITE_LOCAL === 'true') return localFetch<T>(path, method, body)
   // El servidor responde los errores en el idioma de la interfaz.
   const headers: Record<string, string> = { Accept: 'application/json', 'Accept-Language': currentLanguage() }
   // Con FormData el navegador pone el Content-Type multipart con su boundary.
@@ -95,4 +97,16 @@ export async function apiFetch<T>(path: string, { method = 'GET', body }: Reques
   if (!response.ok) throw await toApiError(response)
   if (response.status === 204) return undefined as T
   return (await response.json()) as T
+}
+
+/** En la app los datos están en el móvil: la misma petición la responde la base de datos local. */
+async function localFetch<T>(path: string, method: string, body: unknown): Promise<T> {
+  const local = await import('../local')
+  try {
+    const response = await local.localRequest(method, path, body)
+    return response.body as T
+  } catch (error) {
+    const problem = local.toProblem(error)
+    throw new ApiError(problem.status, problem.title, problem.detail, problem.fieldErrors)
+  }
 }

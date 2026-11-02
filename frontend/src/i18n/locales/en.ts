@@ -1140,6 +1140,9 @@ const en: Messages = {
   settings: {
     title: 'Settings',
     account: 'Account',
+    profile: 'Your profile',
+    localData:
+      'Your data is stored only on this phone, without a server. Backup is not available in the app yet: if you uninstall it or clear its data, it is lost.',
     name: 'Name',
     email: 'Email',
     timezone: 'Time zone',

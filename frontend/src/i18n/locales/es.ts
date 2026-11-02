@@ -1139,6 +1139,9 @@ const es = {
   settings: {
     title: 'Ajustes',
     account: 'Cuenta',
+    profile: 'Tu perfil',
+    localData:
+      'Tus datos se guardan solo en este móvil, sin servidor. La copia de seguridad todavía no está disponible en la app: si la desinstalas o borras sus datos, se pierden.',
     name: 'Nombre',
     email: 'Correo electrónico',
     timezone: 'Zona horaria',

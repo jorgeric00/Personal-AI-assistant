@@ -7,6 +7,7 @@ import { addDays } from '../../lib/date'
 import { useDateFormat } from '../../lib/useRelativeDate'
 import { Field } from '../../ui/Field'
 import { Sheet } from '../../ui/Sheet'
+import { LOCAL_MODE, moduleEnabled } from '../../platform'
 import { RelatedNotes } from '../notes/RelatedNotes'
 import { useToast } from '../../ui/toast-context'
 import { usePushState } from '../notifications/push'
@@ -221,24 +222,29 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
           </Field>
         </div>
 
-        <Field label={t('tasks.form.notification')} id="task-notify" error={fieldError('reminderMinutesBefore')}>
-          <select
-            id="task-notify"
-            value={form.dueTime ? form.notify : ''}
-            disabled={!form.dueTime}
-            onChange={(e) => set('notify', e.target.value)}
-          >
-            <option value="">{t('tasks.notify.none')}</option>
-            {NOTIFY_OPTIONS.map((minutes) => (
-              <option key={minutes} value={minutes}>
-                {notifyLabel(minutes, t)}
-              </option>
-            ))}
-          </select>
-        </Field>
-        {!form.dueTime && <p className="hint">{t('tasks.form.notificationNeedsTime')}</p>}
-        {form.dueTime && form.notify !== '' && push.status !== 'on' && push.status !== 'loading' && (
-          <p className="hint">{t('tasks.form.notificationsOff')}</p>
+        {/* En la app los avisos llegarán con las notificaciones locales; hasta entonces no se ofrecen. */}
+        {!LOCAL_MODE && (
+          <>
+            <Field label={t('tasks.form.notification')} id="task-notify" error={fieldError('reminderMinutesBefore')}>
+              <select
+                id="task-notify"
+                value={form.dueTime ? form.notify : ''}
+                disabled={!form.dueTime}
+                onChange={(e) => set('notify', e.target.value)}
+              >
+                <option value="">{t('tasks.notify.none')}</option>
+                {NOTIFY_OPTIONS.map((minutes) => (
+                  <option key={minutes} value={minutes}>
+                    {notifyLabel(minutes, t)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            {!form.dueTime && <p className="hint">{t('tasks.form.notificationNeedsTime')}</p>}
+            {form.dueTime && form.notify !== '' && push.status !== 'on' && push.status !== 'loading' && (
+              <p className="hint">{t('tasks.form.notificationsOff')}</p>
+            )}
+          </>
         )}
 
         <RecurrenceFields
@@ -384,7 +390,7 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
         </section>
       )}
 
-      {task && <RelatedNotes taskId={task.id} />}
+      {task && moduleEnabled('notes') && <RelatedNotes taskId={task.id} />}
 
       {task && (
         <section className="sheet-section">

@@ -9,6 +9,7 @@ import { LOCAL_MODE } from '../../platform'
 import { useThemePreference, type ThemePreference } from '../../theme/theme'
 import { Field } from '../../ui/Field'
 import { useToast } from '../../ui/toast-context'
+import { LocalBackup } from './LocalBackup'
 import { LocalReminderSettings } from '../notifications/LocalReminderSettings'
 import { NotificationSettings } from '../notifications/NotificationSettings'
 import { DeleteDataSheet } from './DeleteDataSheet'
@@ -116,6 +117,7 @@ export function SettingsPage() {
       </section>
 
       {LOCAL_MODE ? <LocalReminderSettings /> : <NotificationSettings />}
+      {LOCAL_MODE && <LocalBackup />}
 
       {!LOCAL_MODE && <ServerOnlySettings onDelete={() => setDeleting(true)} />}
       {!LOCAL_MODE && params.get('borrar') === '1' && <DeleteDataSheet onClose={() => setDeleting(false)} />}

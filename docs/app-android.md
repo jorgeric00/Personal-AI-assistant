@@ -17,13 +17,24 @@ Capacitor. Los datos están en una base de datos SQLite dentro del almacenamient
 | Avisos de tareas y recordatorios | ✅ Los programa el propio móvil, sin internet (ver abajo) |
 | Avisos de agenda y hábitos | ❌ Aún no (tampoco están en la web hasta fusionar #21) |
 | Finanzas, entreno, alimentación, objetivos e informes | ❌ Aún no: no aparecen en la app |
-| Copia de seguridad (exportar e importar) | ❌ Aún no |
+| Copia de seguridad | ✅ Guardar y restaurar un archivo con todos los datos (ver abajo) |
 
 Lo que todavía no está no aparece en la app, para no dejar nada a medias. Se irá añadiendo por partes.
 
-> **Importante mientras no haya copia de seguridad:** si desinstalas la app o borras sus datos desde los ajustes de
-> Android, se pierde todo. La copia automática de Android en la nube de Google está desactivada a propósito
-> (`allowBackup="false"`), porque subiría tus datos personales a un servicio externo.
+## Copia de seguridad
+
+Los datos solo están en el móvil: si desinstalas la app o borras sus datos desde los ajustes de Android, se pierden.
+La copia automática de Android en la nube de Google está desactivada a propósito (`allowBackup="false"`), porque
+subiría tus datos personales a un servicio externo sin que lo decidas tú.
+
+En **Ajustes → Copia de seguridad**:
+
+- **Guardar copia** crea un archivo `lifeos-copia-AAAA-MM-DD.lifeos` con todos los datos y abre el menú de compartir
+  de Android para que elijas dónde guardarlo (Archivos, un ordenador, tu nube…). La app no lo envía a ningún sitio
+  por su cuenta. El archivo no va cifrado: guárdalo en un sitio de confianza.
+- **Restaurar una copia** sustituye todos los datos por los del archivo, después de confirmarlo. Si el archivo no es
+  una copia de LifeOS o está dañado, no se cambia nada. Una copia de una versión anterior de la app se pone al día
+  sola; una de una versión más nueva pide actualizar la app primero.
 
 ## Avisos
 

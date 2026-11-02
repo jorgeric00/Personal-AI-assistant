@@ -2,7 +2,14 @@
  * Mensajes de la API local: los mismos textos que messages*.properties del servidor (una prueba comprueba que
  * coinciden), más los propios de la app en LOCAL_ONLY_KEYS.
  */
-export const LOCAL_ONLY_KEYS = ['error.not-available.title', 'error.not-available.detail']
+export const LOCAL_ONLY_KEYS = [
+  'error.not-available.title',
+  'error.not-available.detail',
+  'error.backup-invalid.title',
+  'error.backup-invalid.detail',
+  'error.backup-newer.title',
+  'error.backup-newer.detail',
+]
 
 export const MESSAGES: Record<'es' | 'en', Record<string, string>> = {
   es: {
@@ -91,6 +98,10 @@ export const MESSAGES: Record<'es' | 'en', Record<string, string>> = {
     'push.reminder.on': '{0} a las {1}',
     'error.not-available.title': 'Aún no está en la app',
     'error.not-available.detail': 'Esta parte de LifeOS todavía no funciona sin servidor.',
+    'error.backup-invalid.title': 'No es una copia de LifeOS',
+    'error.backup-invalid.detail': 'El archivo no es una copia de seguridad de LifeOS o está dañado. No se ha cambiado nada.',
+    'error.backup-newer.title': 'Copia de una versión más nueva',
+    'error.backup-newer.detail': 'Esta copia se hizo con una versión más nueva de LifeOS. Actualiza la app y vuelve a intentarlo.',
   },
   en: {
     'error.validation.title': 'Invalid data',
@@ -178,5 +189,9 @@ export const MESSAGES: Record<'es' | 'en', Record<string, string>> = {
     'push.reminder.on': '{0} at {1}',
     'error.not-available.title': 'Not in the app yet',
     'error.not-available.detail': 'This part of LifeOS does not work without a server yet.',
+    'error.backup-invalid.title': 'Not a LifeOS backup',
+    'error.backup-invalid.detail': 'The file is not a LifeOS backup or it is damaged. Nothing has been changed.',
+    'error.backup-newer.title': 'Backup from a newer version',
+    'error.backup-newer.detail': 'This backup was made with a newer version of LifeOS. Update the app and try again.',
   },
 }

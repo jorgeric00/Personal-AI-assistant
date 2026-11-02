@@ -8,8 +8,9 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // En la CI cada compilación tiene un número mayor, para que Android acepte instalarla encima de la anterior.
-        versionCode (System.getenv("LIFEOS_VERSION_CODE") ?: "1").toInteger()
-        versionName "0.1." + (System.getenv("LIFEOS_VERSION_CODE") ?: "0")
+        def buildNumber = System.getenv("LIFEOS_VERSION_CODE") ?: "1"
+        versionCode = buildNumber.toInteger()
+        versionName = "0.1." + buildNumber
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

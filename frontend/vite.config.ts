@@ -1,6 +1,6 @@
 /// <reference types="vitest/config" />
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, searchForWorkspaceRoot } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 const backend = process.env.LIFEOS_BACKEND_URL ?? 'http://localhost:8080'
@@ -39,6 +39,8 @@ export default defineConfig({
     }),
   ],
   server: {
+    // La prueba de local/messages.ts compara sus textos con los del servidor (backend/src/main/resources).
+    fs: { allow: [searchForWorkspaceRoot(process.cwd()), '../backend/src/main/resources'] },
     proxy: {
       '/api': backend,
       '/actuator': backend,

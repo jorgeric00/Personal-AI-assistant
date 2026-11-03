@@ -8,6 +8,7 @@ export type Row = Record<string, SqlValue>
 /** Base de datos SQLite de la app (sql.js), con consultas tipadas y migraciones por versión. */
 export class LocalDb {
   private readonly db: Database
+  private writes = 0
 
   constructor(db: Database) {
     this.db = db
@@ -32,7 +33,13 @@ export class LocalDb {
   }
 
   run(sql: string, params: Param[] = []): void {
+    this.writes++
     this.db.run(sql, params.map(toSql))
+  }
+
+  /** Número de escrituras hechas, para saber si una petición ha cambiado algo que haya que guardar. */
+  get writeCount(): number {
+    return this.writes
   }
 
   /** Ejecuta todo o nada: si algo falla, deshace los cambios. */

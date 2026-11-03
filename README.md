@@ -20,7 +20,7 @@ técnicas en [docs/arquitectura.md](docs/arquitectura.md).
 
 ## App Android
 
-LifeOS también se puede instalar como app Android que guarda los datos en el móvil, sin servidor (de momento con Hoy, tareas y ajustes). Cómo instalarla y qué funciona: [docs/app-android.md](docs/app-android.md).
+LifeOS también se puede instalar como app Android que guarda los datos en el móvil, sin servidor (de momento con Hoy, agenda, tareas, notas, hábitos y ajustes). Cómo instalarla y qué funciona: [docs/app-android.md](docs/app-android.md).
 
 ## Arrancar con Docker (recomendado)
 

@@ -15,7 +15,7 @@ Capacitor. Los datos están en una base de datos SQLite dentro del almacenamient
 | Hábitos | ✅ Todo: diarios o unas veces por semana, marcar días, rachas y estadísticas |
 | Ajustes | ✅ Nombre, idioma y apariencia |
 | Avisos de tareas y recordatorios | ✅ Los programa el propio móvil, sin internet (ver abajo) |
-| Avisos de agenda y hábitos | ❌ Aún no (tampoco están en la web hasta fusionar #21) |
+| Avisos de agenda y hábitos | ❌ Aún no: en la app no se muestran esos campos (en la web sí funcionan) |
 | Finanzas, entreno, alimentación, objetivos e informes | ❌ Aún no: no aparecen en la app |
 | Copia de seguridad | ✅ Guardar y restaurar un archivo con todos los datos (ver abajo) |
 

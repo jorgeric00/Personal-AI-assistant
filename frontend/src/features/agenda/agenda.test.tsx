@@ -146,8 +146,39 @@ describe('agenda', () => {
         description: null,
         location: 'Casa',
         recurrence: null,
+        reminderMinutesBefore: null,
       }),
     )
+  })
+
+  it('guarda un aviso antes de la actividad y lo desactiva si es de todo el día', async () => {
+    let saved: Record<string, unknown> | null = null
+    mockFetch({
+      'GET /api/auth/me': () => json(testUser),
+      'GET /api/agenda?from=2026-10-12&to=2026-10-18': () => json([]),
+      'GET /api/agenda/categories': () => json(categories),
+      'GET /api/agenda?from=2026-10-14&to=2026-10-14': () => json([]),
+      'GET /api/auth/csrf': csrf,
+      'POST /api/agenda/activities': (init) => {
+        saved = body(init)
+        return json({}, 201)
+      },
+    })
+    renderApp('/agenda?actividad=nueva')
+    const user = userEvent.setup()
+
+    await user.type(await screen.findByLabelText('Título'), 'Dentista')
+    await user.selectOptions(screen.getByLabelText('Categoría'), 'c2')
+    const notify = screen.getByLabelText('Aviso')
+    await user.selectOptions(notify, '15')
+    await user.click(screen.getByLabelText('Todo el día'))
+    expect(notify).toBeDisabled()
+    expect(screen.getByText('Elige una hora para poder avisarte.')).toBeInTheDocument()
+    await user.click(screen.getByLabelText('Todo el día'))
+    expect(notify).toHaveValue('15')
+
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(saved?.reminderMinutesBefore).toBe(15))
   })
 
   it('en la vista mensual muestra la lista del día elegido', async () => {

@@ -1,7 +1,9 @@
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
+import { LOCAL_MODE } from '../../platform'
 import { Field } from '../../ui/Field'
+import { useReminderStatus } from './localReminders'
 import { usePushState } from './push'
 
 /** Opciones de aviso en minutos antes de la hora. */
@@ -40,10 +42,23 @@ export function ReminderSelect({ id, hasTime, value, onChange, error }: Props) {
 
 /** Recuerda que el aviso no llegará si las notificaciones están apagadas en este dispositivo. */
 export function PushOffHint() {
+  return LOCAL_MODE ? <AppNotificationsHint /> : <WebPushHint />
+}
+
+function WebPushHint() {
   const { t } = useTranslation()
   const { status } = usePushState()
   if (status === 'on' || status === 'loading') return null
   return <p className="hint">{t('tasks.form.notificationsOff')}</p>
+}
+
+/** En la app el propio móvil programa los avisos: solo hace falta su permiso. */
+function AppNotificationsHint() {
+  const { t } = useTranslation()
+  const { data } = useReminderStatus()
+  if (data?.permission === 'unsupported') return <p className="hint">{t('tasks.form.notificationsAppOnly')}</p>
+  if (data?.permission === 'denied') return <p className="hint">{t('tasks.form.notificationsDeniedApp')}</p>
+  return null
 }
 
 function notifyLabel(minutes: number, t: TFunction) {

@@ -1,4 +1,4 @@
-import { daysBetween, mondayOf, monthsBetweenFirstDays, plusDays, plusMonths, weekdayName, type WeekdayName } from './dates'
+import { daysBetween, mondayOf, monthsBetweenFirstDays, plusDays, plusMonths, weekdayName, type WeekdayName, WEEKDAY_NAMES } from './dates'
 
 export type Frequency = 'DAILY' | 'WEEKLY' | 'MONTHLY'
 
@@ -24,7 +24,8 @@ export class Recurrence {
   ) {
     this.frequency = frequency
     this.interval = interval
-    this.weekdays = [...new Set(weekdays ?? [])].sort()
+    // En el orden de la semana, como EnumSet<DayOfWeek> en el servidor.
+    this.weekdays = WEEKDAY_NAMES.filter((day) => (weekdays ?? []).includes(day))
     this.anchor = anchor
     this.until = until
   }

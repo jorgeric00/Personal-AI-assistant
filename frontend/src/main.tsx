@@ -16,6 +16,10 @@ const router = createBrowserRouter(routes)
 
 // En la app Android los ficheros ya están en el móvil: no hace falta service worker.
 if (!LOCAL_MODE) registerSW({ immediate: true })
+// En la app los avisos los programa el propio móvil.
+if (import.meta.env.VITE_LOCAL === 'true') {
+  void import('./local').then((local) => local.startReminders((url) => void router.navigate(url)))
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

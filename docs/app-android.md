@@ -8,19 +8,46 @@ Capacitor. Los datos están en una base de datos SQLite dentro del almacenamient
 
 | Parte | En la app |
 | --- | --- |
-| Hoy | ✅ Saludo, tareas de hoy, próximos recordatorios y notas fijadas |
+| Hoy | ✅ Saludo, tareas y agenda de hoy, próximos recordatorios, hábitos de hoy y notas fijadas |
 | Tareas y recordatorios | ✅ Todo: repetición, categorías, completar, posponer, calendario |
 | Notas | ✅ Todo: etiquetas, búsqueda, fijar, favoritas, archivo, papelera (se vacía a los 30 días) y tareas relacionadas |
+| Agenda | ✅ Actividades con categorías, repetición, estados, solapes, vistas de día, semana y mes. Los entrenos aparecerán cuando el entreno funcione en la app |
+| Hábitos | ✅ Todo: diarios o unas veces por semana, marcar días, rachas y estadísticas |
 | Ajustes | ✅ Nombre, idioma y apariencia |
-| Avisos (notificaciones) | ❌ Aún no: el campo «Aviso» no se muestra en la app hasta que funcione |
-| Agenda, hábitos, finanzas, entreno, alimentación, objetivos e informes | ❌ Aún no: no aparecen en la app |
-| Copia de seguridad (exportar e importar) | ❌ Aún no |
+| Avisos de tareas y recordatorios | ✅ Los programa el propio móvil, sin internet (ver abajo) |
+| Avisos de agenda y hábitos | ❌ Aún no: en la app no se muestran esos campos (en la web sí funcionan) |
+| Finanzas, entreno, alimentación, objetivos e informes | ❌ Aún no: no aparecen en la app |
+| Copia de seguridad | ✅ Guardar y restaurar un archivo con todos los datos (ver abajo) |
 
 Lo que todavía no está no aparece en la app, para no dejar nada a medias. Se irá añadiendo por partes.
 
-> **Importante mientras no haya copia de seguridad:** si desinstalas la app o borras sus datos desde los ajustes de
-> Android, se pierde todo. La copia automática de Android en la nube de Google está desactivada a propósito
-> (`allowBackup="false"`), porque subiría tus datos personales a un servicio externo.
+## Copia de seguridad
+
+Los datos solo están en el móvil: si desinstalas la app o borras sus datos desde los ajustes de Android, se pierden.
+La copia automática de Android en la nube de Google está desactivada a propósito (`allowBackup="false"`), porque
+subiría tus datos personales a un servicio externo sin que lo decidas tú.
+
+En **Ajustes → Copia de seguridad**:
+
+- **Guardar copia** crea un archivo `lifeos-copia-AAAA-MM-DD.lifeos` con todos los datos y abre el menú de compartir
+  de Android para que elijas dónde guardarlo (Archivos, un ordenador, tu nube…). La app no lo envía a ningún sitio
+  por su cuenta. El archivo no va cifrado: guárdalo en un sitio de confianza.
+- **Restaurar una copia** sustituye todos los datos por los del archivo, después de confirmarlo. Si el archivo no es
+  una copia de LifeOS o está dañado, no se cambia nada. Una copia de una versión anterior de la app se pone al día
+  sola; una de una versión más nueva pide actualizar la app primero.
+
+## Avisos
+
+Los avisos de las tareas y recordatorios con «Aviso» los programa el propio móvil con notificaciones locales: no
+pasan por ningún servidor y suenan aunque no haya internet.
+
+- La primera vez que guardes algo con aviso, Android pedirá permiso para mostrar notificaciones. También se puede
+  activar en **Ajustes → Notificaciones** de LifeOS.
+- En Android 12 o posterior, el sistema puede retrasar los avisos unos minutos si LifeOS no tiene permiso de
+  «Alarmas y recordatorios». Ajustes de LifeOS muestra un botón para concederlo cuando falta.
+- Cada vez que abres la app o cambias algo se programan los avisos de los próximos 30 días (como mucho 200). Si
+  pasas más de un mes sin abrir la app, los avisos posteriores no sonarán hasta que la vuelvas a abrir.
+- Al tocar un aviso se abre la lista de tareas.
 
 ## Instalarla en el móvil
 

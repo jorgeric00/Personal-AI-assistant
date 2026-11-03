@@ -12,6 +12,8 @@ const config: CapacitorConfig = {
   plugins: {
     // La interfaz ya respeta env(safe-area-inset-*) (viewport-fit=cover), así que se dibuja de borde a borde.
     SystemBars: { insetsHandling: 'native', initialViewportFitValueHint: 'cover' },
+    // Avisos de tareas y recordatorios: icono de silueta y el color de LifeOS.
+    LocalNotifications: { smallIcon: 'ic_stat_lifeos', iconColor: '#0F766E' },
   },
 }
 

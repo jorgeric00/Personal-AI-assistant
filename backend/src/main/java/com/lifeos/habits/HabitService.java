@@ -101,7 +101,8 @@ public class HabitService {
                         "habits.times.invalid")
                 .throwIfAny();
         habit.update(name, request.color().toLowerCase(), request.frequency(), request.weekdays(),
-                request.timesPerWeek(), Boolean.TRUE.equals(request.archived()), clock.instant());
+                request.timesPerWeek(), Boolean.TRUE.equals(request.archived()), request.reminderTime(),
+                clock.instant());
     }
 
     private Habit load(UUID userId, UUID id) {

@@ -69,6 +69,9 @@ public class Activity {
     @Column(name = "recurrence_until")
     private LocalDate recurrenceUntil;
 
+    @Column(name = "reminder_minutes_before")
+    private Integer reminderMinutesBefore;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -86,7 +89,7 @@ public class Activity {
 
     public void update(String title, ActivityCategory category, LocalDate startDate, LocalTime startTime,
             LocalDate endDate, LocalTime endTime, String description, String location, Recurrence recurrence,
-            Instant now) {
+            Integer reminderMinutesBefore, Instant now) {
         this.title = title;
         this.category = category;
         this.startDate = startDate;
@@ -100,6 +103,8 @@ public class Activity {
         this.recurrenceWeekdays = recurrence == null || recurrence.weekdays().isEmpty() ? null
                 : recurrence.weekdaysAsString();
         this.recurrenceUntil = recurrence == null ? null : recurrence.until();
+        // Solo se puede avisar antes de una hora concreta
+        this.reminderMinutesBefore = startTime == null ? null : reminderMinutesBefore;
         this.updatedAt = now;
     }
 
@@ -122,6 +127,10 @@ public class Activity {
             return startDate.isAfter(to) || startDate.isBefore(earliestStart) ? List.of() : List.of(startDate);
         }
         return recurrence.occurrencesBetween(startDate, earliestStart, to);
+    }
+
+    public Integer getReminderMinutesBefore() {
+        return reminderMinutesBefore;
     }
 
     public UUID getId() {

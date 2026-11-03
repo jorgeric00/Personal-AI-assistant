@@ -30,6 +30,8 @@ function toResponse(habit: HabitRow, checks: string[]) {
     timesPerWeek: habit.times_per_week,
     startDate: habit.start_date,
     archived: habit.archived === 1,
+    // Los avisos de hábitos todavía no funcionan en la app.
+    reminderTime: null,
     checks,
   }
 }

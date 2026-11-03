@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
 
+import type { ParseKeys } from 'i18next'
+
 import { useCurrentUser } from '../../auth/auth'
 import { formatLongDate, greetingKey, todayIso } from '../../lib/date'
 import { useDateFormat } from '../../lib/useRelativeDate'
 import { PlusIcon, ReportsIcon, SettingsIcon } from '../../ui/icons'
 import { formatMoney } from '../../lib/money'
+import { moduleEnabled, type AppModule } from '../../platform'
 import { TodayAgenda } from '../agenda/TodayAgenda'
 import { useMonthSummary } from '../finance/api'
 import { TodayWorkout } from '../fitness/TodayWorkout'
@@ -17,6 +20,16 @@ import { NoteCard } from '../notes/NoteCard'
 import { useTasks } from '../tasks/api'
 import { TaskItem } from '../tasks/TaskItem'
 import { useTaskActions } from '../tasks/useTaskActions'
+
+const QUICK_ACTIONS: { to: string; label: ParseKeys; module: AppModule }[] = [
+  { to: '/tareas?nueva=TASK', label: 'tasks.kind.TASK', module: 'tasks' },
+  { to: '/tareas?nueva=REMINDER', label: 'tasks.kind.REMINDER', module: 'tasks' },
+  { to: '/agenda?actividad=nueva', label: 'agenda.newShort', module: 'agenda' },
+  { to: '/notas?nueva=1', label: 'notes.kind', module: 'notes' },
+  { to: '/finanzas?nuevo=EXPENSE', label: 'finance.kind.EXPENSE', module: 'finance' },
+  { to: '/entreno?vista=FOOD&alimento=nuevo', label: 'nutrition.quickAdd', module: 'fitness' },
+  { to: '/entreno?vista=PROGRESS&nuevo=1', label: 'fitness.quickAdd', module: 'fitness' },
+]
 
 const TODAY_LIMIT = 6
 const REMINDERS_LIMIT = 3
@@ -41,8 +54,6 @@ export function DashboardPage() {
 
   const today = useTasks('TODAY')
   const reminders = useTasks('UPCOMING', { kind: 'REMINDER' })
-  const pinnedNotes = useNotes('ACTIVE', { pinned: true })
-  const month = useMonthSummary(todayIso(timeZone).slice(0, 7))
   const { completeTask, isCompleting } = useTaskActions()
   const openTask = (id: string) => navigate(`/tareas?tarea=${id}`)
 
@@ -54,13 +65,15 @@ export function DashboardPage() {
       <header className="page-header page-header-row">
         <div>
           <p className="eyebrow">{formatLongDate(now, locale, timeZone)}</p>
-          <h1 className="h1">{user ? t('greeting.withName', { greeting, name: user.displayName }) : greeting}</h1>
+          <h1 className="h1">{user?.displayName ? t('greeting.withName', { greeting, name: user.displayName }) : greeting}</h1>
         </div>
         {/* En el móvil Informes y Ajustes no caben en la barra inferior */}
         <div className="header-actions mobile-only">
-          <Link to="/informes" className="icon-button" aria-label={t('nav.reports')}>
-            <ReportsIcon />
-          </Link>
+          {moduleEnabled('reports') && (
+            <Link to="/informes" className="icon-button" aria-label={t('nav.reports')}>
+              <ReportsIcon />
+            </Link>
+          )}
           <Link to="/ajustes" className="icon-button" aria-label={t('nav.settings')}>
             <SettingsIcon />
           </Link>
@@ -72,34 +85,12 @@ export function DashboardPage() {
           {t('dashboard.quickAdd')}
         </h2>
         <div className="quick-actions">
-          <Link to="/tareas?nueva=TASK" className="quick-action">
-            <PlusIcon />
-            {t('tasks.kind.TASK')}
-          </Link>
-          <Link to="/tareas?nueva=REMINDER" className="quick-action">
-            <PlusIcon />
-            {t('tasks.kind.REMINDER')}
-          </Link>
-          <Link to="/agenda?actividad=nueva" className="quick-action">
-            <PlusIcon />
-            {t('agenda.newShort')}
-          </Link>
-          <Link to="/notas?nueva=1" className="quick-action">
-            <PlusIcon />
-            {t('notes.kind')}
-          </Link>
-          <Link to="/finanzas?nuevo=EXPENSE" className="quick-action">
-            <PlusIcon />
-            {t('finance.kind.EXPENSE')}
-          </Link>
-          <Link to="/entreno?vista=FOOD&alimento=nuevo" className="quick-action">
-            <PlusIcon />
-            {t('nutrition.quickAdd')}
-          </Link>
-          <Link to="/entreno?vista=PROGRESS&nuevo=1" className="quick-action">
-            <PlusIcon />
-            {t('fitness.quickAdd')}
-          </Link>
+          {QUICK_ACTIONS.filter((action) => moduleEnabled(action.module)).map((action) => (
+            <Link key={action.to} to={action.to} className="quick-action">
+              <PlusIcon />
+              {t(action.label)}
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -138,13 +129,13 @@ export function DashboardPage() {
         )}
       </section>
 
-      <TodayAgenda />
+      {moduleEnabled('agenda') && <TodayAgenda />}
 
-      <TodayWorkout />
+      {moduleEnabled('fitness') && <TodayWorkout />}
 
-      <TodayHabits />
+      {moduleEnabled('habits') && <TodayHabits />}
 
-      <TodayGoals />
+      {moduleEnabled('goals') && <TodayGoals />}
 
       <section className="stack-sm" aria-labelledby="reminders-title">
         <h2 id="reminders-title" className="h2">
@@ -168,64 +159,82 @@ export function DashboardPage() {
         )}
       </section>
 
-      <section className="stack-sm" aria-labelledby="pinned-title">
-        <div className="section-header">
-          <h2 id="pinned-title" className="h2">
-            {t('dashboard.pinnedNotes')}
-          </h2>
-          <Link to="/notas" className="link">
-            {t('common.seeAll')}
-          </Link>
-        </div>
-        {pinnedNotes.isPending ? (
-          <div className="card skeleton" aria-hidden="true" />
-        ) : (pinnedNotes.data ?? []).length === 0 ? (
-          <p className="card muted">{t('dashboard.pinnedNotesEmpty')}</p>
-        ) : (
-          <ul className="note-grid list-plain">
-            {pinnedNotes.data!.slice(0, PINNED_LIMIT).map((note) => (
-              <NoteCard key={note.id} note={note} onOpen={(id) => navigate(`/notas?nota=${id}`)} />
-            ))}
-          </ul>
-        )}
-      </section>
+      {moduleEnabled('notes') && <PinnedNotes />}
 
-      <section className="stack-sm" aria-labelledby="month-title">
-        <div className="section-header">
-          <h2 id="month-title" className="h2">
-            {t('dashboard.thisMonth')}
-          </h2>
-          <Link to="/finanzas" className="link">
-            {t('common.seeAll')}
-          </Link>
-        </div>
-        {month.isPending ? (
-          <div className="card skeleton" aria-hidden="true" />
-        ) : !month.data || (month.data.totals.incomeCents === 0 && month.data.totals.expenseCents === 0) ? (
-          <p className="card muted">{t('dashboard.thisMonthEmpty')}</p>
-        ) : (
-          <Link to="/finanzas" className="card month-card">
-            <span>
-              <span className="stat-label">{t('finance.income')}</span>
-              <span className="stat-value amount-income">
-                {formatMoney(month.data.totals.incomeCents, month.data.currency, locale)}
-              </span>
-            </span>
-            <span>
-              <span className="stat-label">{t('finance.expenses')}</span>
-              <span className="stat-value amount-expense">
-                {formatMoney(month.data.totals.expenseCents, month.data.currency, locale)}
-              </span>
-            </span>
-            <span>
-              <span className="stat-label">{t('finance.balance')}</span>
-              <span className={`stat-value ${month.data.totals.balanceCents < 0 ? 'amount-expense' : 'amount-income'}`}>
-                {formatMoney(month.data.totals.balanceCents, month.data.currency, locale, { signed: true })}
-              </span>
-            </span>
-          </Link>
-        )}
-      </section>
+      {moduleEnabled('finance') && <MonthSummary />}
     </div>
+  )
+}
+
+function PinnedNotes() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const pinnedNotes = useNotes('ACTIVE', { pinned: true })
+  return (
+    <section className="stack-sm" aria-labelledby="pinned-title">
+      <div className="section-header">
+        <h2 id="pinned-title" className="h2">
+          {t('dashboard.pinnedNotes')}
+        </h2>
+        <Link to="/notas" className="link">
+          {t('common.seeAll')}
+        </Link>
+      </div>
+      {pinnedNotes.isPending ? (
+        <div className="card skeleton" aria-hidden="true" />
+      ) : (pinnedNotes.data ?? []).length === 0 ? (
+        <p className="card muted">{t('dashboard.pinnedNotesEmpty')}</p>
+      ) : (
+        <ul className="note-grid list-plain">
+          {pinnedNotes.data!.slice(0, PINNED_LIMIT).map((note) => (
+            <NoteCard key={note.id} note={note} onOpen={(id) => navigate(`/notas?nota=${id}`)} />
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+function MonthSummary() {
+  const { t } = useTranslation()
+  const { locale, timeZone } = useDateFormat()
+  const month = useMonthSummary(todayIso(timeZone).slice(0, 7))
+  return (
+    <section className="stack-sm" aria-labelledby="month-title">
+      <div className="section-header">
+        <h2 id="month-title" className="h2">
+          {t('dashboard.thisMonth')}
+        </h2>
+        <Link to="/finanzas" className="link">
+          {t('common.seeAll')}
+        </Link>
+      </div>
+      {month.isPending ? (
+        <div className="card skeleton" aria-hidden="true" />
+      ) : !month.data || (month.data.totals.incomeCents === 0 && month.data.totals.expenseCents === 0) ? (
+        <p className="card muted">{t('dashboard.thisMonthEmpty')}</p>
+      ) : (
+        <Link to="/finanzas" className="card month-card">
+          <span>
+            <span className="stat-label">{t('finance.income')}</span>
+            <span className="stat-value amount-income">
+              {formatMoney(month.data.totals.incomeCents, month.data.currency, locale)}
+            </span>
+          </span>
+          <span>
+            <span className="stat-label">{t('finance.expenses')}</span>
+            <span className="stat-value amount-expense">
+              {formatMoney(month.data.totals.expenseCents, month.data.currency, locale)}
+            </span>
+          </span>
+          <span>
+            <span className="stat-label">{t('finance.balance')}</span>
+            <span className={`stat-value ${month.data.totals.balanceCents < 0 ? 'amount-expense' : 'amount-income'}`}>
+              {formatMoney(month.data.totals.balanceCents, month.data.currency, locale, { signed: true })}
+            </span>
+          </span>
+        </Link>
+      )}
+    </section>
   )
 }

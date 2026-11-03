@@ -1,0 +1,96 @@
+import initSqlJs from 'sql.js'
+import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url'
+
+import i18n from '../i18n'
+import { LocalApi } from './api'
+import { LocalError } from './errors'
+import { saveFile } from './files'
+import { MESSAGES } from './messages'
+import { onReminderOpened, syncReminders } from './notifications'
+import { indexedDbStorage } from './storage'
+
+/** Punto de entrada de la API local en la app. Se carga aparte para que la web no descargue SQLite. */
+
+let api: Promise<LocalApi> | null = null
+
+function openApi(): Promise<LocalApi> {
+  api ??= (async () => {
+    // Pide que el sistema no borre los datos de la app para liberar espacio.
+    await navigator.storage?.persist?.().catch(() => false)
+    const sql = await initSqlJs({ locateFile: () => wasmUrl })
+    return LocalApi.open({ sql, storage: indexedDbStorage() })
+  })()
+  return api
+}
+
+export interface LocalProblem {
+  status: number
+  title: string
+  detail: string
+  fieldErrors: Record<string, string>
+}
+
+export function localMessage(key: string): string {
+  const language = i18n.language?.startsWith('en') ? 'en' : 'es'
+  return MESSAGES[language][key] ?? MESSAGES.es[key] ?? key
+}
+
+/** Traduce un error de la API local al mismo formato que los errores del servidor. */
+export function toProblem(error: unknown): LocalProblem {
+  if (error instanceof LocalError) {
+    return {
+      status: error.status,
+      title: localMessage(`error.${error.code}.title`),
+      detail: localMessage(`error.${error.code}.detail`),
+      fieldErrors: Object.fromEntries(Object.entries(error.fieldErrors).map(([f, k]) => [f, localMessage(k)])),
+    }
+  }
+  console.error(error)
+  return {
+    status: 500,
+    title: localMessage('error.internal.title'),
+    detail: localMessage('error.internal.detail'),
+    fieldErrors: {},
+  }
+}
+
+export async function localRequest(method: string, path: string, body?: unknown) {
+  const response = await (await openApi()).request(method, path, body)
+  if (method !== 'GET') scheduleReminderSync()
+  return response
+}
+
+let syncTimer: ReturnType<typeof setTimeout> | undefined
+
+/** Vuelve a programar los avisos del móvil poco después del último cambio (agrupa los cambios seguidos). */
+export function scheduleReminderSync(delay = 400): void {
+  clearTimeout(syncTimer)
+  syncTimer = setTimeout(() => {
+    void openApi()
+      .then((local) => local.reminders())
+      .then(syncReminders)
+      .catch((error: unknown) => console.error('No se han podido programar los avisos', error))
+  }, delay)
+}
+
+/** Arranque de la app: programa los avisos pendientes y abre la pantalla de un aviso al tocarlo. */
+export function startReminders(open: (url: string) => void): void {
+  onReminderOpened(open)
+  scheduleReminderSync(0)
+}
+
+/** Guarda una copia de seguridad con todos los datos de la app. */
+export async function exportBackup(today: string): Promise<void> {
+  const bytes = await (await openApi()).exportBackup()
+  await saveFile(`lifeos-copia-${today}.lifeos`, bytes, 'application/octet-stream')
+}
+
+/** Sustituye todos los datos por los de una copia y vuelve a programar los avisos. */
+export async function restoreBackup(file: File): Promise<void> {
+  try {
+    await (await openApi()).restoreBackup(new Uint8Array(await file.arrayBuffer()))
+  } catch (error) {
+    throw new Error(toProblem(error).detail)
+  }
+  scheduleReminderSync(0)
+}

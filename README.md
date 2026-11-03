@@ -18,6 +18,10 @@ técnicas en [docs/arquitectura.md](docs/arquitectura.md).
 | 6. Avisos y móvil | Notificaciones de agenda y hábitos, mejoras para el móvil | En curso: avisos antes de las actividades de la agenda ✅ · recordatorio diario opcional de hábitos ✅ |
 | 5. Tus datos | Copias de seguridad, restauración y exportación completa | En curso: copias automáticas diarias con restauración documentada ✅ · descarga de todos tus datos en ZIP ✅ · borrado controlado por bloques ✅ |
 
+## App Android
+
+LifeOS también se puede instalar como app Android que guarda los datos en el móvil, sin servidor (de momento con Hoy, agenda, tareas, notas, hábitos y ajustes). Cómo instalarla y qué funciona: [docs/app-android.md](docs/app-android.md).
+
 ## Arrancar con Docker (recomendado)
 
 Necesitas Docker Desktop (o Docker Engine con el plugin Compose).

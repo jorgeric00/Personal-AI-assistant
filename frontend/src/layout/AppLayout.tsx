@@ -4,6 +4,7 @@ import { NavLink, Outlet } from 'react-router'
 
 import type { ParseKeys } from 'i18next'
 
+import { moduleEnabled, type AppModule } from '../platform'
 import {
   AgendaIcon,
   FinanceIcon,
@@ -24,19 +25,20 @@ interface NavItem {
   end?: boolean
   /** En el móvil no cabe en la barra inferior; se llega desde la cabecera de Hoy. */
   desktopOnly?: boolean
+  module?: AppModule
 }
 
 // Cada módulo nuevo añade aquí su entrada cuando esté disponible.
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'nav.today', icon: <TodayIcon />, end: true },
-  { to: '/agenda', label: 'nav.agenda', icon: <AgendaIcon /> },
-  { to: '/tareas', label: 'nav.tasks', icon: <TasksIcon /> },
-  { to: '/notas', label: 'nav.notes', icon: <NotesIcon /> },
-  { to: '/finanzas', label: 'nav.finance', icon: <FinanceIcon /> },
-  { to: '/entreno', label: 'nav.fitness', icon: <FitnessIcon /> },
-  { to: '/habitos', label: 'nav.habits', icon: <HabitsIcon /> },
-  { to: '/objetivos', label: 'nav.goals', icon: <GoalsIcon />, desktopOnly: true },
-  { to: '/informes', label: 'nav.reports', icon: <ReportsIcon />, desktopOnly: true },
+  { to: '/agenda', label: 'nav.agenda', icon: <AgendaIcon />, module: 'agenda' },
+  { to: '/tareas', label: 'nav.tasks', icon: <TasksIcon />, module: 'tasks' },
+  { to: '/notas', label: 'nav.notes', icon: <NotesIcon />, module: 'notes' },
+  { to: '/finanzas', label: 'nav.finance', icon: <FinanceIcon />, module: 'finance' },
+  { to: '/entreno', label: 'nav.fitness', icon: <FitnessIcon />, module: 'fitness' },
+  { to: '/habitos', label: 'nav.habits', icon: <HabitsIcon />, module: 'habits' },
+  { to: '/objetivos', label: 'nav.goals', icon: <GoalsIcon />, desktopOnly: true, module: 'goals' },
+  { to: '/informes', label: 'nav.reports', icon: <ReportsIcon />, desktopOnly: true, module: 'reports' },
   { to: '/ajustes', label: 'nav.settings', icon: <SettingsIcon />, desktopOnly: true },
 ]
 
@@ -53,7 +55,7 @@ export function AppLayout() {
           <span>LifeOS</span>
         </div>
         <ul>
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.filter((item) => !item.module || moduleEnabled(item.module)).map((item) => (
             <li key={item.to} className={item.desktopOnly ? 'desktop-only' : undefined}>
               <NavLink to={item.to} end={item.end} className="app-nav-link">
                 {item.icon}

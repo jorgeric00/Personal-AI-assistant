@@ -6,6 +6,7 @@ import { addDays } from '../../lib/date'
 import { useDateFormat } from '../../lib/useRelativeDate'
 import { Field } from '../../ui/Field'
 import { Sheet } from '../../ui/Sheet'
+import { moduleEnabled } from '../../platform'
 import { RelatedNotes } from '../notes/RelatedNotes'
 import { useToast } from '../../ui/toast-context'
 import { ReminderSelect } from '../notifications/ReminderSelect'
@@ -367,7 +368,7 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
         </section>
       )}
 
-      {task && <RelatedNotes taskId={task.id} />}
+      {task && moduleEnabled('notes') && <RelatedNotes taskId={task.id} />}
 
       {task && (
         <section className="sheet-section">

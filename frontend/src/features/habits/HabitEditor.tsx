@@ -7,6 +7,7 @@ import { useDateFormat } from '../../lib/useRelativeDate'
 import { Field } from '../../ui/Field'
 import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast-context'
+import { LOCAL_MODE } from '../../platform'
 import { PushOffHint } from '../notifications/ReminderSelect'
 import { CATEGORY_COLORS, WEEKDAYS, type Weekday } from '../tasks/api'
 import { useDeleteHabit, useSaveHabit, type Habit, type HabitFrequency } from './api'
@@ -159,11 +160,21 @@ export function HabitEditor({ habit, onClose }: HabitEditorProps) {
             </select>
           </Field>
         )}
-        <Field label={t('habits.form.reminder')} id="habit-reminder" error={serverErrors.reminderTime}>
-          <input id="habit-reminder" type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} />
-        </Field>
-        <p className="muted small">{t('habits.form.reminderHelp')}</p>
-        {reminderTime && <PushOffHint />}
+        {/* En la app los avisos de hábitos todavía no se programan en el móvil: no se ofrecen. */}
+        {!LOCAL_MODE && (
+          <>
+            <Field label={t('habits.form.reminder')} id="habit-reminder" error={serverErrors.reminderTime}>
+              <input
+                id="habit-reminder"
+                type="time"
+                value={reminderTime}
+                onChange={(e) => setReminderTime(e.target.value)}
+              />
+            </Field>
+            <p className="muted small">{t('habits.form.reminderHelp')}</p>
+            {reminderTime && <PushOffHint />}
+          </>
+        )}
         {habit && (
           <label className="checkbox-row">
             <input type="checkbox" checked={archived} onChange={(e) => setArchived(e.target.checked)} />

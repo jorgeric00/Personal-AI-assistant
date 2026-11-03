@@ -4,6 +4,7 @@ import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url'
 import i18n from '../i18n'
 import { LocalApi } from './api'
 import { LocalError } from './errors'
+import { saveFile } from './files'
 import { MESSAGES } from './messages'
 import { onReminderOpened, syncReminders } from './notifications'
 import { indexedDbStorage } from './storage'
@@ -75,5 +76,21 @@ export function scheduleReminderSync(delay = 400): void {
 /** Arranque de la app: programa los avisos pendientes y abre la pantalla de un aviso al tocarlo. */
 export function startReminders(open: (url: string) => void): void {
   onReminderOpened(open)
+  scheduleReminderSync(0)
+}
+
+/** Guarda una copia de seguridad con todos los datos de la app. */
+export async function exportBackup(today: string): Promise<void> {
+  const bytes = await (await openApi()).exportBackup()
+  await saveFile(`lifeos-copia-${today}.lifeos`, bytes, 'application/octet-stream')
+}
+
+/** Sustituye todos los datos por los de una copia y vuelve a programar los avisos. */
+export async function restoreBackup(file: File): Promise<void> {
+  try {
+    await (await openApi()).restoreBackup(new Uint8Array(await file.arrayBuffer()))
+  } catch (error) {
+    throw new Error(toProblem(error).detail)
+  }
   scheduleReminderSync(0)
 }

@@ -112,6 +112,8 @@ function toResponse(a: ActivityRow) {
     description: a.description,
     location: a.location,
     recurrence: r && { frequency: r.frequency, interval: r.interval, weekdays: r.weekdays, until: r.until },
+    // Los avisos de la agenda todavía no funcionan en la app.
+    reminderMinutesBefore: null,
   }
 }
 

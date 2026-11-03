@@ -40,7 +40,7 @@ class DataExportIntegrationTest {
     /** Tablas que no son datos del usuario o que no tiene sentido llevarse a otro sitio. */
     private static final Set<String> NOT_EXPORTED = Set.of("app_user", "flyway_schema_history", "spring_session",
             "spring_session_attributes", "server_key", "push_subscription", "task_notification",
-            "finance_budget_alert", "progress_photo_data");
+            "finance_budget_alert", "progress_photo_data", "activity_notification", "habit_notification");
 
     private static final Timestamp CREATED = Timestamp.from(Instant.parse("2026-09-01T10:00:00Z"));
 

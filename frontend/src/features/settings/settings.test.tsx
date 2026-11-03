@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
@@ -58,7 +58,8 @@ describe('borrado de datos', () => {
     await user.type(within(dialog).getByLabelText('Tu contraseña, para confirmar'), 'buena')
     await user.click(confirm)
     expect(await screen.findByText('Datos borrados')).toBeInTheDocument()
-    expect(screen.queryByRole('dialog')).toBeNull()
+    // El aviso puede salir antes de que se cierre la hoja
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(router.state.location.search).toBe('')
     expect(requests).toEqual([
       { scopes: ['FINANCE', 'HABITS'], password: 'mala' },

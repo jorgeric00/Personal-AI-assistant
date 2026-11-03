@@ -746,6 +746,8 @@ const en: Messages = {
       timesPerWeek: 'How many times',
       archived: 'Archived',
       archivedHelp: 'No longer shown in Today or the week, but its history is kept.',
+      reminder: 'Remind me at',
+      reminderHelp: 'Optional. We only remind you on due days and if you have not checked it yet.',
     },
     history: {
       title: 'How it’s going',
@@ -1188,7 +1190,7 @@ const en: Messages = {
     notificationsInsecure: 'Notifications require the app to be served over HTTPS.',
     notificationsDenied:
       'You have blocked notifications for LifeOS. Allow them in your browser or system settings and come back.',
-    notificationsOff: 'Get alerts for your tasks and reminders on this device.',
+    notificationsOff: 'Get alerts for your tasks, reminders, agenda and habits on this device.',
     notificationsOn: 'Notifications are on for this device.',
     notificationsEnable: 'Turn on notifications',
     notificationsDisable: 'Turn off',

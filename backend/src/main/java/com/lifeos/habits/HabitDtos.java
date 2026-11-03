@@ -2,6 +2,7 @@ package com.lifeos.habits;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -27,16 +28,19 @@ public final class HabitDtos {
             Set<DayOfWeek> weekdays,
             @Min(value = 1, message = "{habits.times.invalid}")
             @Max(value = 7, message = "{habits.times.invalid}") Integer timesPerWeek,
-            Boolean archived) {
+            Boolean archived,
+            LocalTime reminderTime) {
     }
 
     /** checks: días cumplidos dentro del rango pedido. */
     public record HabitResponse(UUID id, String name, String color, HabitFrequency frequency, List<DayOfWeek> weekdays,
-            Integer timesPerWeek, LocalDate startDate, boolean archived, List<LocalDate> checks) {
+            Integer timesPerWeek, LocalDate startDate, boolean archived, LocalTime reminderTime,
+            List<LocalDate> checks) {
 
         static HabitResponse from(Habit h, List<LocalDate> checks) {
             return new HabitResponse(h.getId(), h.getName(), h.getColor(), h.getFrequency(),
-                    List.copyOf(h.getWeekdays()), h.getTimesPerWeek(), h.getStartDate(), h.isArchived(), checks);
+                    List.copyOf(h.getWeekdays()), h.getTimesPerWeek(), h.getStartDate(), h.isArchived(),
+                    h.getReminderTime(), checks);
         }
     }
 }

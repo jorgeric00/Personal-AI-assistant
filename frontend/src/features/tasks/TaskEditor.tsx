@@ -1,4 +1,3 @@
-import type { TFunction } from 'i18next'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -9,7 +8,7 @@ import { Field } from '../../ui/Field'
 import { Sheet } from '../../ui/Sheet'
 import { RelatedNotes } from '../notes/RelatedNotes'
 import { useToast } from '../../ui/toast-context'
-import { usePushState } from '../notifications/push'
+import { ReminderSelect } from '../notifications/ReminderSelect'
 import {
   CATEGORY_COLORS,
   PRIORITIES,
@@ -36,9 +35,6 @@ interface FormState extends RecurrenceFieldValues {
   categoryId: string
   notify: string
 }
-
-/** Opciones de aviso en minutos antes de la hora. */
-const NOTIFY_OPTIONS = [0, 5, 15, 30, 60, 120, 1440]
 
 function initialState(task: Task | null, kind: TaskKind, today: string): FormState {
   return {
@@ -90,7 +86,6 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
   const postpone = usePostponeTask()
   const categories = useCategories()
   const createCategory = useCreateCategory()
-  const push = usePushState()
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((f) => ({ ...f, [key]: value }))
 
@@ -221,25 +216,13 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
           </Field>
         </div>
 
-        <Field label={t('tasks.form.notification')} id="task-notify" error={fieldError('reminderMinutesBefore')}>
-          <select
-            id="task-notify"
-            value={form.dueTime ? form.notify : ''}
-            disabled={!form.dueTime}
-            onChange={(e) => set('notify', e.target.value)}
-          >
-            <option value="">{t('tasks.notify.none')}</option>
-            {NOTIFY_OPTIONS.map((minutes) => (
-              <option key={minutes} value={minutes}>
-                {notifyLabel(minutes, t)}
-              </option>
-            ))}
-          </select>
-        </Field>
-        {!form.dueTime && <p className="hint">{t('tasks.form.notificationNeedsTime')}</p>}
-        {form.dueTime && form.notify !== '' && push.status !== 'on' && push.status !== 'loading' && (
-          <p className="hint">{t('tasks.form.notificationsOff')}</p>
-        )}
+        <ReminderSelect
+          id="task-notify"
+          hasTime={Boolean(form.dueTime)}
+          value={form.notify}
+          onChange={(value) => set('notify', value)}
+          error={fieldError('reminderMinutesBefore')}
+        />
 
         <RecurrenceFields
           idPrefix="task"
@@ -409,11 +392,4 @@ export function TaskEditor({ task, initialKind = 'TASK', onClose }: TaskEditorPr
       )}
     </Sheet>
   )
-}
-
-function notifyLabel(minutes: number, t: TFunction) {
-  if (minutes === 0) return t('tasks.notify.atTime')
-  if (minutes % 1440 === 0) return t('tasks.notify.days', { count: minutes / 1440 })
-  if (minutes % 60 === 0) return t('tasks.notify.hours', { count: minutes / 60 })
-  return t('tasks.notify.minutes', { count: minutes })
 }

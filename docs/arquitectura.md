@@ -39,6 +39,7 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | Moneda por usuario y por movimiento | EUR por defecto en `finance_settings`; cada movimiento guarda su moneda para poder permitir otras en el futuro. Mientras no haya conversión, los resúmenes asumen una sola moneda. |
 | Categorías iniciales al usar el módulo por primera vez | Se crean en el idioma de la cuenta y son editables. Una categoría con movimientos no se borra, se archiva: deja de ofrecerse para movimientos nuevos y se conserva en el historial. La creación es idempotente (`insert … on conflict do nothing`). |
 | Resúmenes calculados en la base de datos | Totales por mes, por categoría y ahorro acumulado (ingresos menos gastos desde el primer movimiento) con `sum` sobre enteros. Los gráficos son SVG propios, sin librerías, con una tabla oculta para lectores de pantalla. |
+| Avisos de agenda y hábitos con el mismo mecanismo que las tareas | Las actividades con hora pueden avisar unos minutos antes del inicio (`ActivityReminderNotifier`); las canceladas no avisan. Los hábitos pueden tener una hora de recordatorio (`HabitReminderNotifier`) que solo se envía los días que toca y si aún no está marcado; en los semanales, mientras no se hayan cumplido las veces de la semana, y el texto dice cuántas llevas sin reprochar nada. Cada aviso se registra en `activity_notification` (actividad + fecha) o `habit_notification` (hábito + día) para enviarlo una sola vez, y se descartan los que llevan más de 2 horas de retraso. |
 | Presupuestos mensuales por categoría de gasto | Un límite por categoría que se aplica a cada mes. Al guardar, cambiar o borrar un movimiento del mes actual se recalcula lo gastado y, al pasar del 80 % o del 100 %, se envía una notificación push. `finance_budget_alert` (presupuesto + mes + nivel) garantiza un solo aviso por nivel y mes. El cálculo va después de confirmar la transacción para no retrasar ni romper el guardado. |
 | Movimientos recurrentes que generan movimientos reales | Una regla (semanal, mensual o anual, cada 1–12, con fecha de fin opcional) crea un movimiento normal en cada fecha: al crearla se generan las fechas ya pasadas (hasta 5 años), una tarea programada cada hora genera las nuevas y también se generan al consultar movimientos o resúmenes. El índice único `(recurring_id, occurrence_date)` y un bloqueo de la regla impiden duplicados. Los meses cortos usan el último día (el 31 pasa a 30 o 28). Detener o borrar una regla conserva los movimientos ya generados, que se pueden editar uno a uno. |
 | Exportación e importación CSV | El mismo formato en los dos sentidos (`date,type,amount,currency,category,account,description,tags`, UTF-8 con BOM para Excel). La importación acepta también `;`, cabeceras en español, «ingreso/gasto» y coma decimal; es todo o nada (si una línea falla no se guarda ninguna y se indica la línea), crea las categorías y cuentas que falten y no duplica movimientos idénticos ya existentes, así se puede reimportar una copia sin riesgo. Las celdas que empiezan por `=`, `+`, `-` o `@` se exportan escapadas para que una hoja de cálculo no las ejecute como fórmulas. |
@@ -82,6 +83,7 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | `task_completion` | Ocurrencias completadas de cada tarea, con la fecha de la ocurrencia y cuándo se completó. |
 | `push_subscription` | Dispositivos con notificaciones activadas: endpoint del servicio push y claves públicas del navegador. |
 | `task_notification` | Avisos ya enviados por tarea y ocurrencia, para no repetirlos. |
+| `activity_notification` / `habit_notification` | Avisos ya enviados por actividad y aparición, y por hábito y día. |
 | `server_key` | Claves generadas por el servidor (VAPID). |
 | `note` | Notas: título, contenido, estado (activa, archivada, en la papelera), fijada, favorita, texto de búsqueda y fechas. |
 | `note_tag` | Etiquetas de cada nota, en minúsculas. |
@@ -100,7 +102,7 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | `routine` / `routine_exercise` | Rutinas con días de la semana opcionales y sus ejercicios en orden, con objetivo de series, repeticiones (rango), peso, tiempo, distancia, descanso e indicaciones. Un ejercicio usado en una rutina no se borra; se archiva. |
 | `workout` / `workout_exercise` / `workout_set` | Entrenamientos (en curso o terminados) con el objetivo copiado de la rutina al empezar y las series anotadas. Solo cuentan las series marcadas como hechas en entrenamientos terminados: de ahí salen el historial, la última vez de cada ejercicio, los récords y la constancia semanal. |
 | `agenda_settings` / `activity_category` | Categorías de actividades (iniciales en el idioma del usuario, editables y archivables; una categoría con actividades no se borra). |
-| `activity` / `activity_occurrence` | Actividades: título, categoría, inicio y fin (fecha y hora locales; sin horas = todo el día), descripción, ubicación y repetición; y el estado guardado de cada aparición. |
+| `activity` / `activity_occurrence` | Actividades: título, categoría, inicio y fin (fecha y hora locales; sin horas = todo el día), descripción, ubicación, repetición y minutos de antelación del aviso; y el estado guardado de cada aparición. |
 | `nutrition_target` | Objetivos diarios opcionales: calorías, proteínas, hidratos, grasas y agua. |
 | `nutrition_day` | Por día: agua bebida y una nota por comida (desayuno, comida, cena, picoteo). |
 | `food_entry` | Alimentos anotados: fecha, comida, nombre, cantidad y unidad, calorías y macros (todo opcional) y si los valores son estimados. |
@@ -109,7 +111,7 @@ Móvil / navegador ──HTTPS──▶ web (nginx: PWA + proxy /api) ──▶ 
 | `custom_metric` / `custom_metric_value` | Indicadores propios de la evolución (nombre, unidad, decimales, archivado) y su valor en cada registro. |
 | `progress_photo` / `progress_photo_data` | Fotos de progreso (fecha, encuadre, notas, tamaño) y sus bytes (imagen reducida y miniatura). |
 | `goal` | Objetivos (título, tipo, medida, meta, ejercicio o hábito de referencia, fechas de inicio y límite, notas, estado y fecha en que se consiguió). |
-| `habit` / `habit_check` | Hábitos (nombre, color, frecuencia diaria con días opcionales o veces por semana, fecha de inicio, archivado) y los días en que se cumplieron. |
+| `habit` / `habit_check` | Hábitos (nombre, color, frecuencia diaria con días opcionales o veces por semana, fecha de inicio, archivado, hora del recordatorio) y los días en que se cumplieron. |
 | `finance_recurring` | Reglas de movimientos recurrentes: importe, categoría, cuenta, descripción, frecuencia, cada cuántos, inicio, fin y próxima fecha. Los movimientos generados guardan `recurring_id` y la fecha de su aparición. |
 
 ## Riesgos y temas abiertos

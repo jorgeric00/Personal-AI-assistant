@@ -3,6 +3,7 @@ import { LocalError } from './errors'
 
 /** Lo que necesita cada operación: la base de datos y el reloj (inyectable en las pruebas). */
 export interface LocalContext {
+  /** Se sustituye al restaurar una copia de seguridad. */
   db: LocalDb
   now(): Date
   timeZone: string

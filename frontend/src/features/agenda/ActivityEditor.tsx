@@ -7,6 +7,7 @@ import { useDateFormat } from '../../lib/useRelativeDate'
 import { Field } from '../../ui/Field'
 import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast-context'
+import { LOCAL_MODE } from '../../platform'
 import { ReminderSelect } from '../notifications/ReminderSelect'
 import { recurrenceFromFields, recurrenceToFields, type RecurrenceFieldValues } from '../tasks/recurrence'
 import { RecurrenceFields } from '../tasks/RecurrenceFields'
@@ -313,13 +314,16 @@ export function ActivityEditor({ activity, date, onClose }: ActivityEditorProps)
           )}
         </div>
 
-        <ReminderSelect
-          id="activity-notify"
-          hasTime={!form.allDay && Boolean(form.startTime)}
-          value={form.notify}
-          onChange={(value) => set('notify', value)}
-          error={fieldErrors.reminderMinutesBefore}
-        />
+        {/* En la app los avisos de la agenda todavía no se programan en el móvil: no se ofrecen. */}
+        {!LOCAL_MODE && (
+          <ReminderSelect
+            id="activity-notify"
+            hasTime={!form.allDay && Boolean(form.startTime)}
+            value={form.notify}
+            onChange={(value) => set('notify', value)}
+            error={fieldErrors.reminderMinutesBefore}
+          />
+        )}
 
         {showConflicts && conflicts.length > 0 && (
           <div ref={conflictRef} className="alert alert-warning stack-sm" role="alert">
